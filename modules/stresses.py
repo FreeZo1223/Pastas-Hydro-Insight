@@ -3,6 +3,9 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import hydropandas.io.knmi as hpd_knmi
+import logging
+
+logger = logging.getLogger("PastasHydroInsight")
 
 @st.cache_data(show_spinner=False)
 def get_nearest_knmi_stations(coords_rd, n=3):
