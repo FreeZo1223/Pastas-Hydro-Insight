@@ -1,5 +1,6 @@
 import pastas as ps
 import pandas as pd
+import numpy as np
 import logging
 
 logger = logging.getLogger("PastasHydroInsight")
@@ -68,3 +69,14 @@ def solve_pastas_model(ml):
     except Exception as e:
         logger.error(f"Pastas Solve Error: {e}")
         return None, str(e)
+
+def get_decomposition(ml):
+    """
+    Returns the contribution of stressors.
+    """
+    if ml is None: return None
+    try:
+        return ml.get_contributions()
+    except Exception as e:
+        logger.error(f"Fout bij ophalen decompositie: {e}")
+        return None
