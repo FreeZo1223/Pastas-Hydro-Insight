@@ -8,20 +8,6 @@ import logging
 # Modules
 import modules.ingestion as ingestion
 import modules.stresses as stresses
-import modules.cleaner as cleaner
-import modules.pastas_model as pastas_model
-import modules.analysis as analysis
-import modules.export as export
-
-# Force reload of all custom modules to ensure fixes are picked up
-import importlib
-importlib.reload(ingestion)
-importlib.reload(stresses)
-importlib.reload(cleaner)
-importlib.reload(pastas_model)
-importlib.reload(analysis)
-importlib.reload(export)
-
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("PastasHydroInsight")
@@ -53,7 +39,6 @@ if "initialized" not in st.session_state:
 
 def main():
     st.title("🌿 Pastas Hydro-Insight")
-    st.caption("Moderne Ecohydrologische Analyse — Vervanger voor Menyanthes/Hydromonitor")
 
     # Tabs
     tab_ingest, tab_clean, tab_analysis, tab_export = st.tabs([

@@ -7,6 +7,7 @@ import os
 
 logger = logging.getLogger("PastasHydroInsight")
 
+@st.cache_data(show_spinner=False)
 def fetch_bro_groundwater(bro_id: str):
     """
     Fetches groundwater level data and metadata from BRO via hydropandas.
@@ -20,22 +21,29 @@ def fetch_bro_groundwater(bro_id: str):
             # Individual well - requires tube_nr
             # Default to tube 1 as it's the most common use case
             obs = hpd.GroundwaterObs.from_bro(bro_id, tube_nr=1)
+            
+            if obs.empty:
+                logger.warning(f"BRO GMW ID {bro_id} leverde een lege set op.")
+                return None, f"Put {bro_id} gevonden, maar bevat geen metingen voor filter 1."
+            
             return obs, None
             
         elif bro_id.startswith("GMN"):
             # Groundwater monitoring net - returns a collection
             oc = hpd.read_bro(bro_id=bro_id)
             if oc.empty:
+                logger.warning(f"GMN ID {bro_id} leeg.")
                 return None, "Geen data gevonden voor dit GMN-netwerk."
             return oc.iloc[0], None
             
         elif bro_id.startswith("GLD"):
             # Direct dossier lookup
             obs = hpd.GroundwaterObs.from_bro(bro_id)
+            if obs.empty:
+                return None, f"Geen data gevonden voor dossier {bro_id}."
             return obs, None
             
         else:
-            # Likely a DINO-ID (e.g. B13D0035) or custom name
             return None, (
                 f"ID '{bro_id}' wordt niet herkend als BRO-ID (begint met GMW, GMN of GLD). "
                 "Voor legacy DINO-nummers: zoek a.u.b. het bijbehorende GMW-nummer op via "
