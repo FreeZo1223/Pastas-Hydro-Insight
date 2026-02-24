@@ -72,11 +72,18 @@ def solve_pastas_model(ml):
 
 def get_decomposition(ml):
     """
-    Returns the contribution of stressors.
+    Returns the contribution of stressors as a dictionary {name: series}.
     """
     if ml is None: return None
     try:
-        return ml.get_contributions()
+        contributions = ml.get_contributions()
+        # ml.get_contributions returns a list of Series
+        # Convert to dict for easier use in plotting
+        decomp = {}
+        for s in contributions:
+            name = getattr(s, "name", "Stress")
+            decomp[name] = s
+        return decomp
     except Exception as e:
         logger.error(f"Fout bij ophalen decompositie: {e}")
         return None
