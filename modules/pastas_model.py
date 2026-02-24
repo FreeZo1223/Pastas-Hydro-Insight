@@ -49,8 +49,9 @@ def solve_pastas_model(ml):
         if ml is None: return None, "Geen model om op te lossen."
         
         # Calculate available warmup based on stressor start vs oseries start
+        # Use .series.index for Pastas TimeSeries objects
         s_start = ml.oseries.series.index.min()
-        prec_start = ml.stressmodels["recharge"].stress[0].index.min()
+        prec_start = ml.stressmodels["recharge"].stress[0].series.index.min()
         available_warmup_days = (s_start - prec_start).days
         
         # Use 10 years or whatever is available
