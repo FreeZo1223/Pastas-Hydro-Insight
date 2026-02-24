@@ -60,17 +60,16 @@ def fetch_bro_groundwater(bro_id: str):
 def get_metadata(obs):
     """
     Extracts relevant metadata from a hydropandas Obs object.
+    In version 0.18.1, metadata is available as direct properties of the Obs object.
     """
-    # hydropandas Obs objects have a .metadata attribute (dict)
-    meta = getattr(obs, "metadata", {})
     return {
-        "Naam": meta.get("name", "Onbekend"),
-        "Filter": meta.get("tube_nr", 1),
-        "X": meta.get("x", 0),
-        "Y": meta.get("y", 0),
-        "Bovenkant Filter": meta.get("screen_top", np.nan),
-        "Onderkant Filter": meta.get("screen_bottom", np.nan),
-        "Maaiveld": meta.get("ground_level", np.nan),
+        "Naam": getattr(obs, "name", "Onbekend"),
+        "Filter": getattr(obs, "tube_nr", 1),
+        "X": getattr(obs, "x", 0),
+        "Y": getattr(obs, "y", 0),
+        "Bovenkant Filter": getattr(obs, "screen_top", np.nan),
+        "Onderkant Filter": getattr(obs, "screen_bottom", np.nan),
+        "Maaiveld": getattr(obs, "ground_level", np.nan),
     }
 
 def read_uploaded_file(uploaded_file):
