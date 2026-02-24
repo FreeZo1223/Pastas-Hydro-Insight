@@ -1,0 +1,11 @@
+streamlit
+pastas
+hydropandas
+pastastore
+plotly
+pandas
+numpy
+xlsxwriter
+requests
+scipy
+streamlit-plotly-events
