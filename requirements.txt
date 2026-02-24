@@ -9,3 +9,4 @@ xlsxwriter
 requests
 scipy
 streamlit-plotly-events
+cachetools

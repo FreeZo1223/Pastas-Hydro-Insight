@@ -186,10 +186,13 @@ def main():
                 if st.button("Koppel Neerslag & Verdamping"):
                     with st.status("KNMI meteorologie ophalen...") as status:
                         s = active_data["series"]
-                        status.write("Aanvraag indienen bij KNMI API...")
-                        prec = stresses.fetch_knmi_data(selected_stn, s.index.min(), s.index.max(), "RH")
+                        # We want at least 10 years of warmup if available
+                        start_warmup = s.index.min() - pd.DateOffset(years=10)
+                        
+                        status.write(f"Aanvraag indienen bij KNMI API ({start_warmup.year} - {s.index.max().year})...")
+                        prec = stresses.fetch_knmi_data(selected_stn, start_warmup, s.index.max(), "RH")
                         status.write("Referentie-verdamping (Makkink) berekenen...")
-                        evap = stresses.fetch_knmi_data(selected_stn, s.index.min(), s.index.max(), "EV24")
+                        evap = stresses.fetch_knmi_data(selected_stn, start_warmup, s.index.max(), "EV24")
                         
                         st.session_state["stresses"]["prec"] = prec
                         st.session_state["stresses"]["evap"] = evap
@@ -235,18 +238,26 @@ def main():
         else:
             if st.button("🚀 Voer Pastas Simulatie uit", key=f"run_ml_{active_id}"):
                 with st.status("Pastas model oplossen...") as status:
-                    status.write("Gegevens voorbereiden...")
-                    ml = pastas_model.build_pastas_model(
+                    status.write("Model opbouwen...")
+                    ml, err_build = pastas_model.build_pastas_model(
                         active_data["series"],
                         st.session_state["stresses"]["prec"],
                         st.session_state["stresses"]["evap"],
                         active_data["outliers"]
                     )
+                    
                     if ml:
-                        status.write("Parameters optimaliseren...")
-                        st.session_state["model"] = ml
-                        status.update(label="Model succesvol opgelost!", state="complete")
+                        status.write("Parameters optimaliseren (Least Squares)...")
+                        ml_solved, err_solve = pastas_model.solve_pastas_model(ml)
+                        
+                        if ml_solved:
+                            st.session_state["model"] = ml_solved
+                            status.update(label="Model succesvol opgelost!", state="complete")
+                        else:
+                            st.error(f"Fout tijdens optimalisatie: {err_solve}")
+                            status.update(label="Model kon niet worden geoptimaliseerd.", state="error")
                     else:
+                        st.error(f"Fout tijdens opbouw: {err_build}")
                         status.update(label="Model kon niet worden opgebouwd.", state="error")
 
             if st.session_state["model"]:

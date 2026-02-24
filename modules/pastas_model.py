@@ -6,36 +6,64 @@ logger = logging.getLogger("PastasHydroInsight")
 
 def build_pastas_model(oseries, prec, evap, outliers=None):
     """
-    Builds and solves a Pastas model (RMM).
-    oseries: Groundwater series
-    prec: Precipitation series
-    evap: Evaporation series
-    outliers: List of timestamps to ignore
+    Builds a Pastas model (RMM) without solving it yet.
+    Returns (model, error_message)
     """
     try:
-        # Handle outliers by setting to NaN in oseries copy
+        # Pre-check: Stressors must not be None
+        if prec is None or evap is None:
+            return None, "Neerslag of verdamping ontbreekt."
+
+        # Handle outliers
         oseries_clean = oseries.copy()
         if outliers is not None and len(outliers) > 0:
-            oseries_clean.loc[outliers] = pd.NA
+            # Pastas handles NaNs in oseries as missing observations
+            oseries_clean.loc[outliers] = np.nan
             logger.info(f"Ignoring {len(outliers)} outliers in model.")
 
         # Create model
         ml = ps.Model(oseries_clean, name="HydroInsight_Model")
 
         # Create stressmodel (RechargeModel)
+        # Using Gamma response function as default
         sm = ps.RechargeModel(prec, evap, ps.Gamma(), name="recharge")
         ml.add_stressmodel(sm)
 
-        # Solve
-        ml.solve(report=False)
-        return ml
-    except Exception as e:
-        logger.error(f"Pastas Model Error: {e}")
-        return None
+        # Check overlap
+        tmin = max(oseries_clean.index.min(), prec.index.min(), evap.index.min())
+        tmax = min(oseries_clean.index.max(), prec.index.max(), evap.index.max())
+        
+        if tmin >= tmax:
+            return None, "Geen overlap tussen grondwaterstand en KNMI data."
 
-def get_decomposition(ml):
+        return ml, None
+    except Exception as e:
+        logger.error(f"Pastas Build Error: {e}")
+        return None, str(e)
+
+def solve_pastas_model(ml):
     """
-    Returns the contribution of stressors.
+    Solves the model with optimized settings for speed and stability.
     """
-    if ml is None: return None
-    return ml.get_contributions()
+    try:
+        if ml is None: return None, "Geen model om op te lossen."
+        
+        # Calculate available warmup based on stressor start vs oseries start
+        s_start = ml.oseries.series.index.min()
+        prec_start = ml.stressmodels["recharge"].stress[0].index.min()
+        available_warmup_days = (s_start - prec_start).days
+        
+        # Use 10 years or whatever is available
+        warmup = min(3650, max(0, available_warmup_days))
+        
+        # Solve with optimized settings
+        # ps.LeastSquares is generally fast and robust
+        ml.solve(
+            warmup=warmup,
+            report=False,
+            solver=ps.LeastSquares()
+        )
+        return ml, None
+    except Exception as e:
+        logger.error(f"Pastas Solve Error: {e}")
+        return None, str(e)

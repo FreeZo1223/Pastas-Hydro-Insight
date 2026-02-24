@@ -41,11 +41,15 @@ def fetch_knmi_data(stn_code, start_date, end_date, variable="RH"):
     """
     try:
         stn = int(stn_code)
+        # Ensure dates are timestamps
+        start = pd.Timestamp(start_date)
+        end = pd.Timestamp(end_date)
+        
         # read_knmi returns an ObsCollection
-        oc = hpd.read_knmi(stns=[stn], meteo_vars=[variable], starts=start_date, ends=end_date)
+        oc = hpd.read_knmi(stns=[stn], meteo_vars=[variable], starts=start, ends=end)
         
         if oc.empty:
-            logger.warning(f"Geen KNMI data gevonden voor station {stn} ({variable}) tussen {start_date} en {end_date}")
+            logger.warning(f"Geen KNMI data gevonden voor station {stn} ({variable}) tussen {start} en {end}")
             return None
             
         # Extract the observation object
@@ -53,6 +57,18 @@ def fetch_knmi_data(stn_code, start_date, end_date, variable="RH"):
         
         # Return only the values as a Series (Pastas requirement)
         series = obs.iloc[:, 0]
+        
+        # Fix: Pastas stressors must be regular and have no NaNs
+        # 1. Ensure daily frequency
+        series = series.asfreq("D")
+        
+        # 2. Fill small gaps with interpolation, larger ones with 0 for RH or mean for EV
+        if series.isna().any():
+            logger.info(f"Filling gaps in {variable} data for station {stn}")
+            if variable == "RH":
+                series = series.fillna(0.0)
+            else:
+                series = series.interpolate(method="linear").fillna(method="bfill").fillna(method="ffill")
         
         if series.dropna().empty:
              logger.warning(f"KNMI data voor station {stn} ({variable}) bevat alleen lege waarden.")
