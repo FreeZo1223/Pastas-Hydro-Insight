@@ -284,7 +284,7 @@ def main():
                 # Decomposition
                 st.subheader("Decompositie")
                 decomp = pastas_model.get_decomposition(ml)
-                if decomp:
+                if decomp is not None:
                     fig_dec = go.Figure()
                     for name, series in decomp.items():
                         fig_dec.add_trace(go.Scatter(x=series.index, y=series.values, mode='lines', name=name))
