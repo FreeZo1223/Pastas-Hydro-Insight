@@ -40,6 +40,9 @@ OVERVIEW_TABLE = "overview-table"
 LOADING_SERIES_CHART = "loading-series_chart"
 SERIES_CHART = "series-chart"
 OVERVIEW_CANCEL_BUTTON = "overview-cancel-button"
+# Customization controls
+OVERVIEW_LAYOUT_MODE = "overview-layout-mode"            # overlay | stacked
+OVERVIEW_STRESS_CHECKLIST = "overview-stress-checklist"  # [prec, evap]
 
 # MODEL TAB
 MODEL_DROPDOWN_SELECTION = "model-dropdown-selection"

@@ -118,7 +118,7 @@ def render(pstore: PastaStoreInterface, selected_data=None):
                     # "overflowY": "auto",
                     "margin-top": 15,
                 },
-                # row_selectable="multi",
+                row_selectable="multi",
                 virtualization=True,
                 style_cell={"whiteSpace": "pre-line", "fontSize": 12},
                 style_cell_conditional=[

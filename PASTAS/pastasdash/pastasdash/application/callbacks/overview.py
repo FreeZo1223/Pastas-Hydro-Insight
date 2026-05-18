@@ -43,13 +43,14 @@ def register_overview_callbacks(app, pstore):
         Output(ids.OVERVIEW_TABLE, "data"),
         Output(ids.ALERT_TIME_SERIES_CHART, "data"),
         Output(ids.OVERVIEW_TABLE_SELECTION_1, "data"),
-        # Output(ids.UPDATE_OVERVIEW_TABLE, "data"),
         Input(ids.OVERVIEW_MAP, "selectedData"),
+        Input(ids.OVERVIEW_TABLE, "selected_row_ids"),
+        Input(ids.OVERVIEW_LAYOUT_MODE, "value"),
+        Input(ids.OVERVIEW_STRESS_CHECKLIST, "value"),
         State(ids.SELECTED_OSERIES_STORE, "data"),
         State(ids.OVERVIEW_TABLE_SELECTION_1, "data"),
         State(ids.OVERVIEW_TABLE_SELECTION_2, "data"),
         background=settings["BACKGROUND_CALLBACKS"],
-        # NOTE: only used if background is True
         running=[
             (Output(ids.OVERVIEW_CANCEL_BUTTON, "disabled"), False, True),
         ],
@@ -57,7 +58,13 @@ def register_overview_callbacks(app, pstore):
         prevent_initial_call=True,
     )
     def plot_overview_time_series(
-        map_selection, current_selected_oseries, table_selected_1, table_selected_2
+        map_selection,
+        table_selected_row_ids,
+        layout_mode,
+        show_stresses,
+        current_selected_oseries,
+        table_selected_1,
+        table_selected_2,
     ):
         """Plots an overview time series based on selected data.
 
@@ -86,109 +93,77 @@ def register_overview_callbacks(app, pstore):
         """
         usecols = [
             "id",
-            # "name",
-            # "nitg_code",
-            # "tube_number",
             pstore.column_mapping["x"],
             pstore.column_mapping["y"],
             pstore.column_mapping["screen_top"],
             pstore.column_mapping["screen_bottom"],
-            # "metingen",
         ]
-        # check for newest entry whether selection was made from table
-        date = pd.Timestamp("1800-01-01 00:00:00")  # some early date
-        table_selected = False
-        for value in [table_selected_1, table_selected_2]:
-            if value is None:
-                continue
-            else:
-                d, t = value
-            if pd.Timestamp(d) > date:
-                table_selected = t
-                date = pd.Timestamp(d)
 
-        # map selection
+        # Combineer selecties uit kaart + tabel-checkboxes (union)
+        names: list[str] = []
         if map_selection is not None:
-            pts = pd.DataFrame(map_selection["points"])
+            pts = pd.DataFrame(map_selection.get("points", []))
+            if not pts.empty and "text" in pts.columns:
+                names.extend(pts["text"].tolist())
+        if table_selected_row_ids:
+            # row_ids zijn integer-posities (zie datasource.py: oseries['id'] = arange)
+            # Map naar oseries-namen via de id-kolom
+            table_names = pstore.oseries.loc[
+                pstore.oseries["id"].isin(table_selected_row_ids)
+            ].index.tolist()
+            names.extend(table_names)
+        # Dedup, keep order
+        seen: set[str] = set()
+        names = [n for n in names if not (n in seen or seen.add(n))]
+        if not names:
+            names = current_selected_oseries or None
 
-            # get selected points
-            if not pts.empty:
-                names = pts["text"].tolist()
-            else:
-                names = None
-
-            if names is not None and len(names) > settings["SERIES_LOAD_LIMIT"]:
-                return (
-                    no_update,
-                    no_update,
-                    (
-                        True,
-                        "warning",
-                        (
-                            "Too many selected points! Maximum no. of "
-                            f"selected points is {settings['SERIES_LOAD_LIMIT']}!"
-                        ),
-                    ),
-                    (pd.Timestamp.now().isoformat(), False),
-                )
-
-            if table_selected:
-                table = no_update
-            else:
-                if names is None:
-                    table = (
-                        pstore.oseries.loc[:, usecols].reset_index().to_dict("records")
-                    )
-                else:
-                    table = (
-                        pstore.oseries.loc[names, usecols]
-                        .reset_index()
-                        .to_dict("records")
-                    )
-
-            try:
-                chart = plot_timeseries(pstore, names)
-                if chart is not None:
-                    return (
-                        chart,
-                        table,
-                        (False, None, None),
-                        (pd.Timestamp.now().isoformat(), False),
-                    )
-                else:
-                    return (
-                        {"layout": {"title": "No data in selected time series."}},
-                        table,
-                        (True, "warning", f"No data to plot for: {names}."),
-                        (pd.Timestamp.now().isoformat(), False),
-                    )
-            except Exception as e:
-                raise e  # for debugging
-                return (
-                    {"layout": {"title": "No series selected."}},
-                    pstore.oseries.loc[:, usecols].reset_index().to_dict("records"),
-                    (
-                        True,  # show alert
-                        "danger",  # alert color
-                        f"Error! Something went wrong: {e}",  # alert message
-                    ),
-                    (pd.Timestamp.now().isoformat(), False),
-                )
-        elif current_selected_oseries is not None:
-            chart = plot_timeseries(pstore, current_selected_oseries)
-            table = pstore.oseries.loc[:, usecols].reset_index().to_dict("records")
+        # Limit-check
+        if names is not None and len(names) > settings["SERIES_LOAD_LIMIT"]:
             return (
-                chart,
+                no_update,
+                no_update,
+                (
+                    True, "warning",
+                    f"Te veel geselecteerde peilbuizen! Max {settings['SERIES_LOAD_LIMIT']}.",
+                ),
+                (pd.Timestamp.now().isoformat(), False),
+            )
+
+        table = pstore.oseries.loc[:, usecols].reset_index().to_dict("records")
+
+        if names is None:
+            return (
+                {"layout": {"title": "Geen peilbuizen geselecteerd. Lasso/klik op de "
+                                    "kaart, of vink rijen aan in de tabel."}},
                 table,
                 (False, None, None),
                 (pd.Timestamp.now().isoformat(), False),
             )
-        else:
-            table = pstore.oseries.loc[:, usecols].reset_index().to_dict("records")
+
+        try:
+            chart = plot_timeseries(
+                pstore, names,
+                layout_mode=layout_mode or "overlay",
+                show_stresses=show_stresses or [],
+            )
+            if chart is None:
+                return (
+                    {"layout": {"title": "Geen data in geselecteerde reeksen."}},
+                    table,
+                    (True, "warning", f"Geen data voor: {names}."),
+                    (pd.Timestamp.now().isoformat(), False),
+                )
             return (
-                {"layout": {"title": "No series selected."}},
-                table,
+                chart, table,
                 (False, None, None),
+                (pd.Timestamp.now().isoformat(), False),
+            )
+        except Exception as e:
+            return (
+                {"layout": {"title": "Fout bij plotten."}},
+                table,
+                (True, "danger", f"Error! {e}"),
                 (pd.Timestamp.now().isoformat(), False),
             )
 
