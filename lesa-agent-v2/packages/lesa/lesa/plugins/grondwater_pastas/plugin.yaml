@@ -1,0 +1,18 @@
+id: grondwater_pastas
+version: "0.1.0"
+name: "Grondwater — peilbuizen + PASTAS-modellering"
+description: >
+  Lokaliseert BRO-peilbuizen in en rondom de AOI en haalt KNMI-dagwaarden
+  voor het dichtstbijzijnde klimaatstation. Optioneel: PASTAS RechargeModel
+  fit per peilbuis met NSE/EVP-statistiek voor toetsing aan neerslag-
+  responsmodel. Output: peilbuizen-GPKG, KNMI-CSV's, eventueel PASTAS-
+  diagnostics.
+rangorde_position: 4
+landscape_types:
+  - duinen
+  - beekdal
+  - veen
+  - zandlandschap
+  - klei
+prerequisites: []
+python_class: "lesa.plugins.grondwater_pastas.plugin:GrondwaterPastasPlugin"

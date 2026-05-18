@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -sL \"https://maps.bodemdata.nl/services/wms?service=WMS&version=1.3.0&request=GetCapabilities\" -o /tmp/wms.xml)",
+      "Read(//tmp/**)",
+      "Bash(curl -sL \"https://maps.bodemdata.nl/geoserver/wfs?service=WFS&version=2.0.0&request=GetCapabilities\" -o /tmp/gs.xml)",
+      "Bash(curl -sL \"https://maps.bodemdata.nl/geoserver/wfs?service=WFS&version=2.0.0&request=DescribeFeatureType&typeName=bodem:Bodemkaart50000_v2025\" -o /tmp/dft.xml)",
+      "mcp__lesa__lesa_get_artifact_paths",
+      "mcp__lesa__lesa_preview_plugin"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "lesa"
+  ]
+}

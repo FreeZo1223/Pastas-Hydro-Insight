@@ -1,0 +1,16 @@
+id: geomorfologie_ahn
+version: "0.1.0"
+name: "Geomorfologie — AHN4 reliëfanalyse"
+description: >
+  Berekent maaiveld-statistieken, helling en lokale reliëf uit AHN4 DTM.
+  Identificeert laagtegebieden (potentieel kwelgevoelig) en hogere
+  ruggen/kopjes. Output: DTM GeoTIFF, helling-raster, laagtepolygonen GeoPackage.
+rangorde_position: 2
+landscape_types:
+  - duinen
+  - beekdal
+  - veen
+  - zandlandschap
+  - klei
+prerequisites: []
+python_class: "lesa.plugins.geomorfologie_ahn.plugin:GeomorfologieAhnPlugin"

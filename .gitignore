@@ -1,0 +1,84 @@
+# ── Secrets / lokale config ─────────────────────────────────
+.env
+.env.local
+*.pem
+*.key
+
+# ── Editor / agent caches ───────────────────────────────────
+/.cache/
+/.claude/
+
+# ── Python ──────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# ── uv / venv (lockfile WEL committen voor reproduceerbaarheid) ──
+.venv/
+.venvs/
+
+# ── Jupyter ─────────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── IDE ─────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+
+# ── OS ──────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── LESA-sessies (per gebruiker, niet delen) ────────────────
+sessions/
+outputs/
+**/sessions/
+**/outputs/
+**/pastastore/lesa_*/
+
+# ── Tijdelijke data / downloads ─────────────────────────────
+*.tmp
+*.bak
+**/data/cache/
+**/data/downloaded/
+
+# ── QGIS ────────────────────────────────────────────────────
+*.qgz~
+*.qgs~
+
+# ── Niet-LESA project-mappen (private werk, niet delen) ─────
+/Alkmaar_Vegetatie/
+/ArcGIS_online/
+/Archief/
+/Bomenrijen/
+/Connectiviteit/
+/Data/
+/MijndenQGIS/
+/NSW_toolbox/
+/Output/
+/Prive_projecten/
+/SMP_analyses/
+/SNL_monitoring/
+/StichtseVechtTestAnalyses/
+/Test_projecten/
+/Zeeland/
+/copilot/
+/geo_stack_old_backup/
+/lesa-agent/
+/nsw-lizmap/
+/qgis_mcp/
+
+# ── Losse junk-bestanden in root ────────────────────────────
+/e.txt
+/o.txt
+/test.pdf
+/test.svg
+/test_mpl.svg
+/mpl_stderr.txt
+/mpl_stdout.txt

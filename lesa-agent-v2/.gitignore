@@ -1,0 +1,32 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+uv.lock
+
+# Data & outputs
+sessions/
+data/cache/
+*.tif
+*.gpkg
+*.parquet
+!examples/**/*.gpkg
+!examples/**/*.geojson
+
+# QGIS
+*.qgz
+*.qgs
+*.qgd
+*.qlr
+*.qml.bak
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,32 @@
+[tool.uv.workspace]
+members = [
+    "geo_stack",
+    "BeSI",
+    "lesa-agent-v2/packages/lesa",
+    "lesa-agent-v2/packages/lesa_agent",
+    "PASTAS/pastas_adapter",
+    "PASTAS/pastasdash",
+]
+
+[tool.uv.sources]
+geo-stack-nl   = { workspace = true }
+lesa           = { workspace = true }
+lesa-agent     = { workspace = true }
+pastas-adapter = { workspace = true }
+pastasdash     = { workspace = true }
+
+[tool.uv]
+prerelease = "allow"
+dev-dependencies = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=5.0",
+    "ruff>=0.4",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = [
+    "unit: unit tests (geen netwerk)",
+    "integration: integration tests (netwerk vereist)",
+]

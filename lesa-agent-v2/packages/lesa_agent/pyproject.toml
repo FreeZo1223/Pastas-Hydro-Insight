@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "lesa-agent"
+version = "0.1.0"
+description = "LESA agent harness — Anthropic tool-use loop en MCP server"
+requires-python = ">=3.11"
+dependencies = [
+    "lesa",
+    "anthropic>=0.25",
+    "mcp>=1.0",
+    "python-dotenv>=1.0",
+]
+
+[project.scripts]
+lesa-agent = "lesa_agent.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["lesa_agent"]

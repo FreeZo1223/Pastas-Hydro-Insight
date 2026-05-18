@@ -1,0 +1,236 @@
+band_number,filename,dutch_name,scientific_name,species_group,broad_group,rl_category,habitat_directive,cutoff_value,national_coverage_pct,weight,notes
+1,Alpenwatersalamander.tif,Alpenwatersalamander,Ichthyosaura alpestris,Amfibieën,Fauna,LC,,0.654,,1,
+2,Bastaardkikker.tif,Bastaardkikker,Pelophylax kl. esculentus,Amfibieën,Fauna,LC,,0.612,,1,
+3,Boomkikker.tif,Boomkikker,Hyla arborea,Amfibieën,Fauna,EN,HR_IV,0.683,,4,HR Bijlage IV
+4,Bruine kikker.tif,Bruine kikker,Rana temporaria,Amfibieën,Fauna,LC,,0.515,,1,
+5,Geelbuikvuurpad.tif,Geelbuikvuurpad,Bombina variegata,Amfibieën,Fauna,CR,HR_II_IV,0.483,,9,HR Bijlage II+IV
+6,Gewone pad.tif,Gewone pad,Bufo bufo,Amfibieën,Fauna,LC,,0.556,,1,
+7,Heikikker.tif,Heikikker,Rana arvalis,Amfibieën,Fauna,VU,HR_IV,0.687,,6,HR Bijlage IV
+8,Kamsalamander.tif,Kamsalamander,Triturus cristatus,Amfibieën,Fauna,VU,HR_II_IV,0.616,,7,HR Bijlage II+IV
+9,Kleine watersalamander.tif,Kleine watersalamander,Lissotriton vulgaris,Amfibieën,Fauna,LC,,0.481,,1,
+10,Knoflookpad.tif,Knoflookpad,Pelobates fuscus,Amfibieën,Fauna,EN,HR_IV,0.524,,7,HR Bijlage IV
+11,Meerkikker.tif,Meerkikker,Pelophylax ridibundus,Amfibieën,Fauna,LC,,0.512,,1,
+12,Poelkikker.tif,Poelkikker,Pelophylax lessonae,Amfibieën,Fauna,VU,HR_IV,0.595,,6,HR Bijlage IV
+13,Rugstreeppad.tif,Rugstreeppad,Epidalea calamita,Amfibieën,Fauna,VU,HR_IV,0.672,,6,HR Bijlage IV
+14,Vinpootsalamander.tif,Vinpootsalamander,Lissotriton helveticus,Amfibieën,Fauna,LC,,0.482,,1,
+15,Vroedmeesterpad.tif,Vroedmeesterpad,Alytes obstetricans,Amfibieën,Fauna,CR,HR_IV,0.483,,8,HR Bijlage IV
+16,Vuursalamander.tif,Vuursalamander,Salamandra salamandra,Amfibieën,Fauna,EN,,0.491,,4,
+17,Blauwzwarte houtbij.tif,Blauwzwarte houtbij,Xylocopa violacea,Bijen en wespen,Insecten,NT,,0.445,,2,
+18,Donkere dubbeltand.tif,Donkere dubbeltand,Nomada obscura,Bijen en wespen,Insecten,CR,,0.474,,5,
+19,Gele tubebij.tif,Gele tubebij,Stelis signata,Bijen en wespen,Insecten,EN,,0.51,,4,
+20,Heidehommel.tif,Heidehommel,Bombus humilis,Bijen en wespen,Insecten,VU,,0.539,,3,
+21,Knautiabij.tif,Knautiabij,Andrena hattorfiana,Bijen en wespen,Insecten,EN,,0.497,,4,
+22,Koolzwarte zandbij.tif,Koolzwarte zandbij,Andrena pilipes,Bijen en wespen,Insecten,VU,,0.483,,3,
+23,Kustbehangersbij.tif,Kustbehangersbij,Megachile maritima,Bijen en wespen,Insecten,NT,,0.502,,2,
+24,Moshommel.tif,Moshommel,Bombus muscorum,Bijen en wespen,Insecten,EN,,0.509,,4,
+25,Rode koekoekshommel.tif,Rode koekoekshommel,Bombus rupestris,Bijen en wespen,Insecten,VU,,0.474,,3,
+26,Roodrandzandbij.tif,Roodrandzandbij,Andrena rosae,Bijen en wespen,Insecten,NT,,0.502,,2,
+27,Vierbandgroefbij.tif,Vierbandgroefbij,Halictus quadricinctus,Bijen en wespen,Insecten,CR,,0.489,,5,
+28,Zandhommel.tif,Zandhommel,Bombus veteranus,Bijen en wespen,Insecten,EN,,0.515,,4,
+29,Zilveren zandbij.tif,Zilveren zandbij,Andrena argentata,Bijen en wespen,Insecten,NT,,0.474,,2,
+30,Zwarte sachembij.tif,Zwarte sachembij,Anthophora retusa,Bijen en wespen,Insecten,CR,,0.538,,5,
+31,Aardbeivlinder.tif,Aardbeivlinder,Pyrgus malvae,Dagvlinders,Insecten,VU,,0.525,,3,
+32,Bosparelmoervlinder.tif,Bosparelmoervlinder,Melitaea athalia,Dagvlinders,Insecten,CR,,0.555,,5,
+33,Boswitje.tif,Boswitje,Leptidea sinapis,Dagvlinders,Insecten,EN,,0.537,,4,
+34,Bruin dikkopje.tif,Bruin dikkopje,Erynnis tages,Dagvlinders,Insecten,VU,,0.595,,3,
+35,Bruine eikenpage.tif,Bruine eikenpage,Satyrium ilicis,Dagvlinders,Insecten,EN,,0.498,,4,
+36,Donker pimpernelblauwtje.tif,Donker pimpernelblauwtje,Phengaris nausithous,Dagvlinders,Insecten,EN,HR_II_IV,0.598,,8,HR Bijlage II+IV
+37,Duinparelmoervlinder.tif,Duinparelmoervlinder,Fabriciana niobe,Dagvlinders,Insecten,CR,,0.592,,5,
+38,Dwergblauwtje.tif,Dwergblauwtje,Cupido minimus,Dagvlinders,Insecten,CR,,0.556,,5,
+39,Geelsprietdikkopje.tif,Geelsprietdikkopje,Thymelicus sylvestris,Dagvlinders,Insecten,NT,,0.512,,2,
+40,Gentiaanblauwtje.tif,Gentiaanblauwtje,Phengaris alcon,Dagvlinders,Insecten,CR,HR_II_IV,0.508,,9,HR Bijlage II+IV
+41,Grote parelmoervlinder.tif,Grote parelmoervlinder,Speyeria aglaja,Dagvlinders,Insecten,CR,,0.512,,5,
+42,Grote vuurvlinder.tif,Grote vuurvlinder,Lycaena dispar,Dagvlinders,Insecten,EN,HR_II_IV,0.499,,8,HR Bijlage II+IV
+43,Grote weerschijnvlinder.tif,Grote weerschijnvlinder,Apatura iris,Dagvlinders,Insecten,VU,,0.524,,3,
+44,Iepenpage.tif,Iepenpage,Satyrium w-album,Dagvlinders,Insecten,EN,,0.388,,4,
+45,Klaverblauwtje.tif,Klaverblauwtje,Cyaniris semiargus,Dagvlinders,Insecten,VU,,0.471,,3,
+46,Kleine heivlinder.tif,Kleine heivlinder,Hipparchia statilinus,Dagvlinders,Insecten,CR,,0.69,,5,
+47,Kleine ijsvogelvlinder.tif,Kleine ijsvogelvlinder,Limenitis camilla,Dagvlinders,Insecten,NT,,0.569,,2,
+48,Kommavlinder.tif,Kommavlinder,Hesperia comma,Dagvlinders,Insecten,VU,,0.592,,3,
+49,Pimpernelblauwtje.tif,Pimpernelblauwtje,Phengaris teleius,Dagvlinders,Insecten,CR,HR_II_IV,0.683,,9,HR Bijlage II+IV
+50,Sleedoornpage.tif,Sleedoornpage,Thecla betulae,Dagvlinders,Insecten,NT,,0.615,,2,
+51,Spiegeldikkopje.tif,Spiegeldikkopje,Heteropterus morpheus,Dagvlinders,Insecten,VU,,0.526,,3,
+52,Veenbesblauwtje.tif,Veenbesblauwtje,Plebejus optilete,Dagvlinders,Insecten,CR,,0.521,,5,
+53,Veenbesparelmoervlinder.tif,Veenbesparelmoervlinder,Boloria aquilonaris,Dagvlinders,Insecten,CR,,0.568,,5,
+54,Veenhooibeestje.tif,Veenhooibeestje,Coenonympha tullia,Dagvlinders,Insecten,CR,,0.707,,5,
+55,Veldparelmoervlinder.tif,Veldparelmoervlinder,Melitaea cinxia,Dagvlinders,Insecten,EN,,0.491,,4,
+56,Zilveren maan.tif,Zilveren maan,Boloria selene,Dagvlinders,Insecten,VU,,0.494,,3,
+57,Gestreepte waterroofkever.tif,Gestreepte waterroofkever,Graphoderus bilineatus,Kevers,Insecten,CR,HR_IV,0.558,,8,HR Bijlage IV
+58,Vermiljoenkever.tif,Vermiljoenkever,Cucujus cinnaberinus,Kevers,Insecten,CR,HR_II_IV,0.497,,9,HR Bijlage II+IV
+59,Vliegend hert.tif,Vliegend hert,Lucanus cervus,Kevers,Insecten,NT,HR_II,0.56,,4,HR Bijlage II
+60,Platte schijfhoren.tif,Platte schijfhoren,Anisus vorticulus,Weekdieren,Overig,CR,HR_II_IV,0.499,,9,HR Bijlage II+IV
+61,Zeggekorfslak.tif,Zeggekorfslak,Vertigo moulinsiana,Weekdieren,Overig,VU,HR_II,0.542,,5,HR Bijlage II
+62,Aardmuis.tif,Aardmuis,Microtus agrestis,Zoogdieren,Fauna,LC,,0.479,,1,
+63,Bever.tif,Bever,Castor fiber,Zoogdieren,Fauna,NT,HR_II_IV,0.702,,5,HR Bijlage II+IV
+64,Boommarter.tif,Boommarter,Martes martes,Zoogdieren,Fauna,NT,HR_IV,0.559,,5,HR Bijlage IV
+65,Bosmuis.tif,Bosmuis,Apodemus sylvaticus,Zoogdieren,Fauna,LC,,0.653,,1,
+66,Bunzing.tif,Bunzing,Mustela putorius,Zoogdieren,Fauna,NT,HR_IV,0.566,,5,HR Bijlage IV
+67,Damhert.tif,Damhert,Dama dama,Zoogdieren,Fauna,NE,,0.539,,1,
+68,Das.tif,Das,Meles meles,Zoogdieren,Fauna,LC,HR_V,0.626,,1,
+69,Dwergmuis.tif,Dwergmuis,Micromys minutus,Zoogdieren,Fauna,LC,,0.517,,1,
+70,Dwergspitsmuis.tif,Dwergspitsmuis,Sorex minutus,Zoogdieren,Fauna,LC,,0.441,,1,
+71,Edelhert.tif,Edelhert,Cervus elaphus,Zoogdieren,Fauna,NT,,0.507,,2,
+72,Eekhoorn.tif,Eekhoorn,Sciurus vulgaris,Zoogdieren,Fauna,NT,,0.704,,2,
+73,Egel.tif,Egel,Erinaceus europaeus,Zoogdieren,Fauna,NT,,0.622,,2,
+74,Eikelmuis.tif,Eikelmuis,Eliomys quercinus,Zoogdieren,Fauna,CR,,0.474,,5,
+75,Gewone bosspitsmuis.tif,Gewone bosspitsmuis,Sorex araneus,Zoogdieren,Fauna,LC,,0.368,,1,
+76,Grote bosmuis.tif,Grote bosmuis,Apodemus flavicollis,Zoogdieren,Fauna,LC,,0.512,,1,
+77,Haas.tif,Haas,Lepus europaeus,Zoogdieren,Fauna,NT,,0.69,,2,
+78,Hamster.tif,Hamster,Cricetus cricetus,Zoogdieren,Fauna,CR,HR_IV,0.538,,8,HR Bijlage IV
+79,Hazelmuis.tif,Hazelmuis,Muscardinus avellanarius,Zoogdieren,Fauna,NT,HR_IV,0.626,,5,HR Bijlage IV
+80,Hermelijn.tif,Hermelijn,Mustela erminea,Zoogdieren,Fauna,NT,,0.51,,2,
+81,Huisspitsmuis.tif,Huisspitsmuis,Crocidura russula,Zoogdieren,Fauna,LC,,0.51,,1,
+82,Konijn.tif,Konijn,Oryctolagus cuniculus,Zoogdieren,Fauna,NT,,0.441,,2,
+83,Noordse woelmuis.tif,Noordse woelmuis,Alexandromys oeconomus arenicola,Zoogdieren,Fauna,EN,HR_II_IV,0.48,,8,HR Bijlage II+IV; endemische ondersoort
+84,Ondergrondse woelmuis.tif,Ondergrondse woelmuis,Microtus subterraneus,Zoogdieren,Fauna,LC,,0.503,,1,
+85,Otter.tif,Otter,Lutra lutra,Zoogdieren,Fauna,VU,HR_II_IV,0.596,,7,HR Bijlage II+IV
+86,Ree.tif,Ree,Capreolus capreolus,Zoogdieren,Fauna,LC,,0.702,,1,
+87,Rosse woelmuis.tif,Rosse woelmuis,Myodes glareolus,Zoogdieren,Fauna,LC,,0.571,,1,
+88,Steenmarter.tif,Steenmarter,Martes foina,Zoogdieren,Fauna,LC,,0.574,,1,
+89,Veldmuis.tif,Veldmuis,Microtus arvalis,Zoogdieren,Fauna,LC,,0.532,,1,
+90,Veldspitsmuis.tif,Veldspitsmuis,Crocidura leucodon,Zoogdieren,Fauna,LC,,0.435,,1,
+91,Vos.tif,Vos,Vulpes vulpes,Zoogdieren,Fauna,LC,,0.473,,1,
+92,Waterspitsmuis.tif,Waterspitsmuis,Neomys fodiens,Zoogdieren,Fauna,NT,,0.444,,2,
+93,Wezel.tif,Wezel,Mustela nivalis,Zoogdieren,Fauna,LC,,0.554,,1,
+94,Woelrat.tif,Woelrat,Arvicola amphibius,Zoogdieren,Fauna,LC,,0.426,,1,
+95,Beekrombout.tif,Beekrombout,Gomphus vulgatissimus,Libellen,Insecten,NT,,0.537,,2,
+96,Bosbeekjuffer.tif,Bosbeekjuffer,Calopteryx virgo,Libellen,Insecten,NT,,0.607,,2,
+97,Donkere waterjuffer.tif,Donkere waterjuffer,Coenagrion armatum,Libellen,Insecten,CR,HR_II,0.508,,7,HR Bijlage II
+98,Gaffellibel.tif,Gaffellibel,Ophiogomphus cecilia,Libellen,Insecten,VU,HR_II_IV,0.482,,6,HR Bijlage II+IV
+99,Gevlekte glanslibel.tif,Gevlekte glanslibel,Somatochlora flavomaculata,Libellen,Insecten,VU,,0.497,,3,
+100,Gevlekte witsnuitlibel.tif,Gevlekte witsnuitlibel,Leucorrhinia pectoralis,Libellen,Insecten,CR,HR_II_IV,0.595,,9,HR Bijlage II+IV
+101,Gewone bronlibel.tif,Gewone bronlibel,Cordulegaster boltonii,Libellen,Insecten,NT,,0.557,,2,
+102,Groene glazenmaker.tif,Groene glazenmaker,Aeshna viridis,Libellen,Insecten,EN,HR_IV,0.567,,7,HR Bijlage IV
+103,Hoogveenglanslibel.tif,Hoogveenglanslibel,Somatochlora arctica,Libellen,Insecten,CR,,0.512,,5,
+104,Kempense heidelibel.tif,Kempense heidelibel,Sympetrum depressiusculum,Libellen,Insecten,CR,,0.537,,5,
+105,Noordse winterjuffer.tif,Noordse winterjuffer,Sympecma paedisca,Libellen,Insecten,EN,HR_IV,0.553,,7,HR Bijlage IV
+106,Oostelijke witsnuitlibel.tif,Oostelijke witsnuitlibel,Leucorrhinia albifrons,Libellen,Insecten,CR,HR_IV,0.485,,8,HR Bijlage IV
+107,Rivierrombout.tif,Rivierrombout,Gomphus flavipes,Libellen,Insecten,VU,HR_II_IV,0.493,,6,HR Bijlage II+IV
+108,Sierlijke witsnuitlibel.tif,Sierlijke witsnuitlibel,Leucorrhinia caudalis,Libellen,Insecten,CR,HR_IV,0.541,,8,HR Bijlage IV
+109,Speerwaterjuffer.tif,Speerwaterjuffer,Coenagrion hastulatum,Libellen,Insecten,CR,,0.543,,5,
+110,Spaanse vlag.tif,Spaanse vlag,Euplagia quadripunctaria,Nachtvlinders,Insecten,NT,HR_II,0.523,,4,HR Bijlage II
+111,Teunisbloempijlstaart.tif,Teunisbloempijlstaart,Proserpinus proserpina,Nachtvlinders,Insecten,NT,HR_IV,0.503,,5,HR Bijlage IV
+112,Athripsodes albifrons.tif,Athripsodes albifrons,Athripsodes albifrons,Overige insecten,Insecten,NE,,0.498,,1,
+113,Brachycentrus subnubilus.tif,Brachycentrus subnubilus,Brachycentrus subnubilus,Overige insecten,Insecten,NE,,0.508,,1,
+114,Ceraclea albimacula.tif,Ceraclea albimacula,Ceraclea albimacula,Overige insecten,Insecten,NE,,0.494,,1,
+115,Grammotaulius nigropunctatus.tif,Grammotaulius nigropunctatus,Grammotaulius nigropunctatus,Overige insecten,Insecten,NE,,0.457,,1,
+116,Grammotaulius nitidus.tif,Grammotaulius nitidus,Grammotaulius nitidus,Overige insecten,Insecten,NE,,0.485,,1,
+117,Hydroptila sparsa.tif,Hydroptila sparsa,Hydroptila sparsa,Overige insecten,Insecten,NE,,0.401,,1,
+118,Limnephilus elegans.tif,Limnephilus elegans,Limnephilus elegans,Overige insecten,Insecten,NE,,0.467,,1,
+119,Limnephilus stigma.tif,Limnephilus stigma,Limnephilus stigma,Overige insecten,Insecten,NE,,0.499,,1,
+120,Stenophylax permistus.tif,Stenophylax permistus,Stenophylax permistus,Overige insecten,Insecten,NE,,0.459,,1,
+121,Vierlijneendagsvlieg.tif,Vierlijneendagsvlieg,Ephemera glaucops,Overige insecten,Insecten,NE,,0.421,,1,
+122,Zwavelhaft.tif,Zwavelhaft,Heptagenia sulphurea,Overige insecten,Insecten,NE,,0.513,,1,
+123,Adder.tif,Adder,Vipera berus,Reptielen,Fauna,VU,,0.673,,3,
+124,Gladde slang.tif,Gladde slang,Coronella austriaca,Reptielen,Fauna,VU,HR_IV,0.572,,6,HR Bijlage IV
+125,Hazelworm.tif,Hazelworm,Anguis fragilis,Reptielen,Fauna,NT,,0.682,,2,
+126,Levendbarende hagedis.tif,Levendbarende hagedis,Zootoca vivipara,Reptielen,Fauna,LC,,0.752,,1,
+127,Muurhagedis.tif,Muurhagedis,Podarcis muralis,Reptielen,Fauna,VU,HR_IV,0.509,,6,HR Bijlage IV
+128,Ringslang.tif,Ringslang,Natrix helvetica,Reptielen,Fauna,NT,,0.684,,2,
+129,Zandhagedis.tif,Zandhagedis,Lacerta agilis,Reptielen,Fauna,VU,HR_IV,0.647,,6,HR Bijlage IV
+130,Weidesprinkhaan.tif,Weidesprinkhaan,Chorthippus dorsatus,Sprinkhanen,Insecten,VU,,0.411,,3,
+131,Wrattenbijter.tif,Wrattenbijter,Decticus verrucivorus,Sprinkhanen,Insecten,CR,,0.618,,5,
+132,Akkerboterbloem.tif,Akkerboterbloem,Ranunculus arvensis,Vaatplanten,Flora,CR,,0.475,,5,
+133,Akkerdoornzaad.tif,Akkerdoornzaad,Torilis arvensis,Vaatplanten,Flora,EN,,0.467,,4,
+134,Akkerogentroost.tif,Akkerogentroost,Odontites vernus subsp. vernus,Vaatplanten,Flora,VU,,0.526,,3,
+135,Bergnachtorchis.tif,Bergnachtorchis,Platanthera chlorantha,Vaatplanten,Flora,NT,,0.521,,2,
+136,Blaasvaren.tif,Blaasvaren,Cystopteris fragilis,Vaatplanten,Flora,NT,,0.488,,2,
+137,Bokkenorchis.tif,Bokkenorchis,Himantoglossum hircinum,Vaatplanten,Flora,VU,HR_II,0.507,,5,HR Bijlage II
+138,Brave hendrik.tif,Brave hendrik,Blitum bonus-henricus,Vaatplanten,Flora,CR,,0.432,,5,
+139,Brede wolfsmelk.tif,Brede wolfsmelk,Euphorbia platyphyllos,Vaatplanten,Flora,CR,,0.507,,5,
+140,Bruinrode wespenorchis.tif,Bruinrode wespenorchis,Epipactis atrorubens,Vaatplanten,Flora,NT,,0.624,,2,
+141,Dennenorchis.tif,Dennenorchis,Goodyera repens,Vaatplanten,Flora,NT,,0.533,,2,
+142,Dreps.tif,Dreps,Bromus secalinus,Vaatplanten,Flora,VU,,0.393,,3,
+143,Drijvende waterweegbree.tif,Drijvende waterweegbree,Luronium natans,Vaatplanten,Flora,EN,HR_II_IV,0.555,,8,HR Bijlage II+IV
+144,Geelgroene wespenorchis.tif,Geelgroene wespenorchis,Epipactis muelleri,Vaatplanten,Flora,EN,,0.697,,4,
+145,Getande veldsla.tif,Getande veldsla,Valerianella dentata,Vaatplanten,Flora,VU,,0.499,,3,
+146,Glad biggenkruid.tif,Glad biggenkruid,Hypochaeris glabra,Vaatplanten,Flora,VU,,0.515,,3,
+147,Gladde zegge.tif,Gladde zegge,Carex laevigata,Vaatplanten,Flora,CR,,0.664,,5,
+148,Groene nachtorchis.tif,Groene nachtorchis,Dactylorhiza viridis,Vaatplanten,Flora,VU,,0.636,,3,
+149,Groenknolorchis.tif,Groenknolorchis,Liparis loeselii,Vaatplanten,Flora,CR,HR_II_IV,0.497,,9,HR Bijlage II+IV
+150,Groensteel.tif,Groensteel,Asplenium viride,Vaatplanten,Flora,EN,,0.798,,4,
+151,Groot spiegelklokje.tif,Groot spiegelklokje,Legousia speculum-veneris,Vaatplanten,Flora,VU,,0.483,,3,
+152,Grote bosaardbei.tif,Grote bosaardbei,Fragaria moschata,Vaatplanten,Flora,NT,,0.468,,2,
+153,Grote leeuwenklauw.tif,Grote leeuwenklauw,Aphanes arvensis,Vaatplanten,Flora,VU,,0.488,,3,
+154,Honingorchis.tif,Honingorchis,Herminium monorchis,Vaatplanten,Flora,CR,,0.643,,5,
+155,Kalkboterbloem.tif,Kalkboterbloem,Ranunculus polyanthemos subsp. polyanthemoides,Vaatplanten,Flora,CR,,0.517,,5,
+156,Kalketrip.tif,Kalketrip,Centaurea calcitrapa,Vaatplanten,Flora,CR,,0.522,,5,
+157,Karwijselie.tif,Karwijselie,Selinum carvifolia,Vaatplanten,Flora,CR,,0.528,,5,
+158,Kleine ereprijs.tif,Kleine ereprijs,Veronica verna,Vaatplanten,Flora,CR,,0.644,,5,
+159,Kleine schorseneer.tif,Kleine schorseneer,Scorzonera humilis,Vaatplanten,Flora,VU,,0.528,,3,
+160,Kleine wolfsmelk.tif,Kleine wolfsmelk,Euphorbia exigua,Vaatplanten,Flora,VU,,0.481,,3,
+161,Kluwenklokje.tif,Kluwenklokje,Campanula glomerata,Vaatplanten,Flora,NT,,0.378,,2,
+162,Knollathyrus.tif,Knollathyrus,Lathyrus linifolius,Vaatplanten,Flora,NT,,0.456,,2,
+163,Knolspirea.tif,Knolspirea,Filipendula vulgaris,Vaatplanten,Flora,NT,,0.417,,2,
+164,Korensla.tif,Korensla,Arnoseris minima,Vaatplanten,Flora,EN,,0.505,,4,
+165,Kruipend moerasscherm.tif,Kruipend moerasscherm,Helosciadium repens,Vaatplanten,Flora,CR,HR_II_IV,0.537,,9,HR Bijlage II+IV
+166,Liggende ereprijs.tif,Liggende ereprijs,Veronica prostrata,Vaatplanten,Flora,VU,,0.463,,3,
+167,Muurbloem.tif,Muurbloem,Erysimum cheiri,Vaatplanten,Flora,VU,,0.467,,3,
+168,Naakte lathyrus.tif,Naakte lathyrus,Lathyrus aphaca,Vaatplanten,Flora,VU,,0.481,,3,
+169,Naaldenkervel.tif,Naaldenkervel,Scandix pecten-veneris,Vaatplanten,Flora,CR,,0.472,,5,
+170,Pijlscheefkelk.tif,Pijlscheefkelk,Arabis hirsuta subsp. sagittata,Vaatplanten,Flora,NT,,0.512,,2,
+171,Rood peperboompje.tif,Rood peperboompje,Daphne mezereum,Vaatplanten,Flora,NT,,0.484,,2,
+172,Rozenkransje.tif,Rozenkransje,Antennaria dioica,Vaatplanten,Flora,CR,,0.508,,5,
+173,Ruw parelzaad.tif,Ruw parelzaad,Lithospermum arvense,Vaatplanten,Flora,CR,,0.386,,5,
+174,Schubvaren.tif,Schubvaren,Asplenium ceterach,Vaatplanten,Flora,VU,,0.495,,3,
+175,Schubzegge.tif,Schubzegge,Carex lepidocarpa,Vaatplanten,Flora,EN,,0.758,,4,
+176,Smalle raai.tif,Smalle raai,Galeopsis angustifolia,Vaatplanten,Flora,VU,,0.49,,3,
+177,Spits havikskruid.tif,Spits havikskruid,Pilosella lactucella,Vaatplanten,Flora,NT,,0.501,,2,
+178,Stijve wolfsmelk.tif,Stijve wolfsmelk,Euphorbia stricta,Vaatplanten,Flora,EN,,0.448,,4,
+179,Stofzaad.tif,Stofzaad,Monotropa hypopitys,Vaatplanten,Flora,NT,,0.528,,2,
+180,Tengere distel.tif,Tengere distel,Carduus tenuiflorus,Vaatplanten,Flora,CR,,0.489,,5,
+181,Tengere veldmuur.tif,Tengere veldmuur,Sabulina tenuifolia,Vaatplanten,Flora,CR,,0.508,,5,
+182,Veenbloembies.tif,Veenbloembies,Scheuchzeria palustris,Vaatplanten,Flora,CR,,0.622,,5,
+183,Vliegenorchis.tif,Vliegenorchis,Ophrys insectifera subsp. insectifera,Vaatplanten,Flora,VU,,0.522,,3,
+184,Vroege ereprijs.tif,Vroege ereprijs,Veronica praecox,Vaatplanten,Flora,CR,,0.57,,5,
+185,Wilde averuit.tif,Wilde averuit,Artemisia campestris subsp. campestris,Vaatplanten,Flora,VU,,0.463,,3,
+186,Wilde ridderspoor.tif,Wilde ridderspoor,Consolida regalis,Vaatplanten,Flora,EN,,0.478,,4,
+187,Wilde weit.tif,Wilde weit,Melampyrum arvense,Vaatplanten,Flora,CR,,0.439,,5,
+188,Wolfskers.tif,Wolfskers,Atropa bella-donna,Vaatplanten,Flora,NT,,0.457,,2,
+189,Zandwolfsmelk.tif,Zandwolfsmelk,Euphorbia seguieriana,Vaatplanten,Flora,VU,,0.496,,3,
+190,Zinkviooltje.tif,Zinkviooltje,Viola lutea subsp. calaminaria,Vaatplanten,Flora,CR,,0.431,,5,
+191,Zweedse kornoelje.tif,Zweedse kornoelje,Cornus suecica,Vaatplanten,Flora,CR,,0.536,,5,
+192,Beekprik.tif,Beekprik,Lampetra planeri,Vissen,Fauna,CR,HR_II,0.575,,7,HR Bijlage II
+193,Bittervoorn.tif,Bittervoorn,Rhodeus amarus,Vissen,Fauna,NT,HR_II,0.638,,4,HR Bijlage II
+194,Elrits.tif,Elrits,Phoxinus phoxinus,Vissen,Fauna,NT,,0.498,,2,
+195,Fint.tif,Fint,Alosa fallax,Vissen,Fauna,CR,HR_II_IV,0.56,,9,HR Bijlage II+IV
+196,Grote modderkruiper.tif,Grote modderkruiper,Misgurnus fossilis,Vissen,Fauna,VU,HR_II,0.571,,5,HR Bijlage II
+197,Kleine modderkruiper.tif,Kleine modderkruiper,Cobitis taenia,Vissen,Fauna,NT,HR_II,0.431,,4,HR Bijlage II
+198,Kopvoorn.tif,Kopvoorn,Leuciscus cephalus,Vissen,Fauna,LC,,0.442,,1,
+199,Kwabaal.tif,Kwabaal,Lota lota,Vissen,Fauna,VU,,0.498,,3,
+200,Rivierdonderpad.tif,Rivierdonderpad,Cottus perifretum,Vissen,Fauna,NT,HR_II,0.515,,4,HR Bijlage II
+201,Rivierprik.tif,Rivierprik,Lampetra fluviatilis,Vissen,Fauna,VU,HR_II,0.504,,5,HR Bijlage II
+202,Boombewonende vleermuizen.tif,Boombewonende vleermuizen,,Vleermuizen,Fauna,NE,,0.5,,1,Groepskaart - geen soortspecifieke cutoff
+203,Gebouwbewonende vleermuizen.tif,Gebouwbewonende vleermuizen,,Vleermuizen,Fauna,NE,,0.5,,1,Groepskaart - geen soortspecifieke cutoff
+204,Aalscholver.tif,Aalscholver,Phalacrocorax carbo,Vogels,Fauna,LC,,0.311,,1,Koloniekaart
+205,Appelvink.tif,Appelvink,Coccothraustes coccothraustes,Vogels,Fauna,LC,,0.523,,1,
+206,Baardman.tif,Baardman,Panurus biarmicus,Vogels,Fauna,NT,,0.415,,2,
+207,Bergeend.tif,Bergeend,Tadorna tadorna,Vogels,Fauna,LC,,0.553,,1,
+208,Blauwborst.tif,Blauwborst,Luscinia svecica,Vogels,Fauna,NT,HR_I,0.559,,4,HR Bijlage I
+209,Blauwe reiger.tif,Blauwe reiger,Ardea cinerea,Vogels,Fauna,LC,,0.56,,1,Koloniekaart
+210,Boerenzwaluw.tif,Boerenzwaluw,Hirundo rustica,Vogels,Fauna,LC,,0.445,,1,
+211,Bontbekplevier.tif,Bontbekplevier,Charadrius hiaticula,Vogels,Fauna,NT,,0.354,,2,
+212,Bonte vliegenvanger.tif,Bonte vliegenvanger,Ficedula hypoleuca,Vogels,Fauna,NT,,0.523,,2,
+213,Boomklever.tif,Boomklever,Sitta europaea,Vogels,Fauna,LC,,0.534,,1,
+214,Boomkruiper.tif,Boomkruiper,Certhia brachydactyla,Vogels,Fauna,LC,,0.526,,1,
+215,Boomleeuwerik.tif,Boomleeuwerik,Lullula arborea,Vogels,Fauna,NT,HR_I,0.574,,4,HR Bijlage I
+216,Boompieper.tif,Boompieper,Anthus trivialis,Vogels,Fauna,NT,,0.564,,2,
+217,Boomvalk.tif,Boomvalk,Falco subbuteo,Vogels,Fauna,NT,,0.335,,2,
+218,Bosrietzanger.tif,Bosrietzanger,Acrocephalus palustris,Vogels,Fauna,LC,,0.534,,1,
+219,Bosuil.tif,Bosuil,Strix aluco,Vogels,Fauna,LC,,0.429,,1,
+220,Braamsluiper.tif,Braamsluiper,Sylvia curruca,Vogels,Fauna,NT,,0.517,,2,
+221,Grutto.tif,Grutto,Limosa limosa,Vogels,Fauna,EN,,0.553,,4,
+222,Nachtzwaluw.tif,Nachtzwaluw,Caprimulgus europaeus,Vogels,Fauna,NT,HR_I,0.591,,4,HR Bijlage I
+223,Nachtegaal.tif,Nachtegaal,Luscinia megarhynchos,Vogels,Fauna,LC,,0.479,,1,
+224,Snor.tif,Snor,Locustella luscinioides,Vogels,Fauna,NT,,0.498,,2,
+225,Veldleeuwerik.tif,Veldleeuwerik,Alauda arvensis,Vogels,Fauna,EN,,0.564,,4,
+226,Watersnip.tif,Watersnip,Gallinago gallinago,Vogels,Fauna,VU,,0.506,,3,
+227,Wulp.tif,Wulp,Numenius arquata,Vogels,Fauna,VU,,0.551,,3,
+228,Zwarte specht.tif,Zwarte specht,Dryocopus martius,Vogels,Fauna,LC,HR_I,0.504,,3,HR Bijlage I
+229,Zwarte stern.tif,Zwarte stern,Chlidonias niger,Vogels,Fauna,EN,HR_I,0.618,,6,HR Bijlage I
+230,Zomertortel.tif,Zomertortel,Streptopelia turtur,Vogels,Fauna,VU,,0.348,,3,
+231,Kwartelkoning.tif,Kwartelkoning,Crex crex,Vogels,Fauna,EN,HR_I,0.627,,6,HR Bijlage I
+232,Kraanvogel.tif,Kraanvogel,Grus grus,Vogels,Fauna,NT,HR_I,0.619,,4,HR Bijlage I
+233,Roerdomp.tif,Roerdomp,Botaurus stellaris,Vogels,Fauna,EN,HR_I,0.464,,6,HR Bijlage I
+234,Strandplevier.tif,Strandplevier,Anarhynchus alexandrinus,Vogels,Fauna,CR,HR_I,0.628,,7,HR Bijlage I
+235,Purperreiger.tif,Purperreiger,Ardea purpurea,Vogels,Fauna,VU,HR_I,0.634,,5,HR Bijlage I

@@ -1,0 +1,19 @@
+{
+  "type": "Feature",
+  "properties": {
+    "name": "Burgh-Haamstede — zandwinplas en omgeving",
+    "crs": "EPSG:28992",
+    "source": "user_geojson",
+    "notes": "Testgebied voor LESA-agent v2. Omvat zandwinplas, ijsbaan en aangrenzende duinrand Kop van Schouwen. Grenst aan N2000 Zeepeduinen."
+  },
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [[
+      [25900.0, 391150.0],
+      [26600.0, 391150.0],
+      [26600.0, 391750.0],
+      [25900.0, 391750.0],
+      [25900.0, 391150.0]
+    ]]
+  }
+}

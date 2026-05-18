@@ -1,0 +1,351 @@
+# data_sources.yaml — Centrale registry van Nederlandse geo-services
+#
+# Hernoemd van services.yaml (geo_stack standalone) → data_sources.yaml (lesa-agent-v2).
+# Dit bestand is de enige plek waar endpoints en versie-metadata worden bijgehouden.
+# Code (discovery.py, cloud_native.py) laadt dit bestand; geen endpoints in business-logica.
+#
+# Velden per entry:
+#   endpoint:        URL van de service
+#   service_type:    WFS | WCS | WMS | STAC | REST | CLOUD_NATIVE
+#   source_version:  Versielabel voor provenance.json
+#   update_cadence:  Hoe vaak bijgewerkt
+#   cql_filter:      true als CQL_FILTER daadwerkelijk werkt (niet tile-cached)
+#   warning:         Bekende beperkingen
+
+services:
+
+  # ── BGT ────────────────────────────────────────────────────────────────────
+  bgt:
+    - label: BGT WFS
+      endpoint: "https://service.pdok.nl/lv/bgt/wfs/v1_0"
+      service_type: WFS
+      source_version: "BGT 2025-Q1"
+      update_cadence: dagelijks
+      cql_filter: true
+      default_crs: "EPSG:28992"
+      feature_types:
+        - bgt:begroeidterreindeel
+        - bgt:onbegroeidterreindeel
+        - bgt:ondersteunendwaterdeel
+        - bgt:ondersteunendwegdeel
+        - bgt:overbruggingsdeel
+        - bgt:overigbouwwerk
+        - bgt:pand
+        - bgt:scheiding
+        - bgt:tunneldeel
+        - bgt:vegetatieobject
+        - bgt:waterdeel
+        - bgt:wegdeel
+
+  # ── AHN ────────────────────────────────────────────────────────────────────
+  ahn:
+    - label: AHN4 WCS (PDOK)
+      endpoint: "https://service.pdok.nl/rws/actueel-hoogtebestand-nederland/wcs/v1_0"
+      service_type: WCS
+      source_version: "AHN4"
+      update_cadence: eenmalig
+      default_crs: "EPSG:28992"
+      coverages:
+        dsm_05m: DSM 0.5m resolutie (downsample via WCS scaleSize voor lagere outputs)
+        dtm_05m: DTM 0.5m resolutie (downsample via WCS scaleSize voor lagere outputs)
+      warning: "WCS-limiet ~5000×5000 px per request; bij grotere AOIs → gebruik COG-modus"
+    - label: AHN4 COG (PDOK OGC API, cloud-native)
+      endpoint: "https://api.pdok.nl/rws/ahn/ogc/v1_0"
+      service_type: CLOUD_NATIVE
+      source_version: "AHN4"
+      update_cadence: eenmalig
+      default_crs: "EPSG:28992"
+      module: "geo_stack.skills.ahn.fetch_ahn_cog"
+      collections:
+        dtm_05m: DTM 0.5m (cloud-native COG tiles)
+        dsm_05m: DSM 0.5m (cloud-native COG tiles)
+      note: |
+        Geen grootte-limiet. Gebruikt rasterio /vsicurl/ om tiles on-the-fly te lezen
+        en samen te voegen. Vereist: rasterio met GDAL VSIcurl-ondersteuning.
+        Automatisch ingeschakeld door fetch_ahn_tile(fetch_method='auto') bij grote AOIs.
+
+  # ── BRO — Bodem, Geomorfologie, REGIS ─────────────────────────────────────
+  bro_bodemkaart:
+    - label: BRO Bodemkaart WFS
+      endpoint: "https://service.pdok.nl/bzk/basisregistratieondergrond/wfs/v1_0"
+      service_type: WFS
+      source_version: "BRO Bodemkaart 1:50000"
+      update_cadence: onregelmatig
+      cql_filter: true
+      default_crs: "EPSG:28992"
+
+  bro_geomorfologie:
+    - label: BRO Geomorfologische kaart WFS
+      endpoint: "https://service.pdok.nl/bzk/basisregistratieondergrond/wfs/v1_0"
+      service_type: WFS
+      source_version: "BRO Geomorfologische kaart"
+      update_cadence: onregelmatig
+      cql_filter: true
+      default_crs: "EPSG:28992"
+
+  bro_grondwater:
+    - label: BRO Grondwaterspiegeldiepte WCS (GHG/GLG/GVG raster)
+      endpoint: "https://service.pdok.nl/bzk/bro-grondwaterspiegeldiepte/wcs/v1_0"
+      service_type: WCS
+      source_version: "BRO grondwaterspiegeldiepte"
+      update_cadence: onregelmatig
+      default_crs: "EPSG:28992"
+      module: "geo_stack.skills.bro_grondwater.fetch_grondwaterstand"
+      products:
+        GHG: Gemiddelde Hoogste Grondwaterstand (cm onder maaiveld)
+        GLG: Gemiddelde Laagste Grondwaterstand (cm onder maaiveld)
+        GVG: Gemiddelde Voorjaarsgrondwaterstand (cm onder maaiveld)
+      note: |
+        Geïnterpoleerd uit BRO-peilbuismetingen — onzekerheid hoger in gebieden
+        zonder dichtbij gelegen peilbuizen. Combineer met fetch_peilbuizen()
+        om meetdichtheid zichtbaar te maken.
+    - label: BRO GMW peilbuispunten (REST, BRO publiek)
+      endpoint: "https://publiek.broservices.nl/gm/gmw/v1/characteristics/searches"
+      service_type: REST
+      source_version: "BRO GMW (publiek)"
+      update_cadence: continu
+      default_crs: "EPSG:28992"
+      module: "geo_stack.skills.bro_grondwater.fetch_peilbuizen"
+      note: |
+        Oude PDOK WFS-endpoint is eind 2025 uitgezet. Werkende route is BRO
+        publieke REST (POST JSON + XML-respons). Tijdreeksen apart per GLD-id.
+
+  # ── Natura 2000 ────────────────────────────────────────────────────────────
+  natura2000:
+    - label: Natura 2000 WFS (RVO)
+      endpoint: "https://service.pdok.nl/rvo/natura2000/wfs/v1_0"
+      service_type: WFS
+      source_version: "Natura 2000 NL 2024"
+      update_cadence: onregelmatig
+      cql_filter: true
+      default_crs: "EPSG:28992"
+
+  # ── BRP Gewaspercelen ──────────────────────────────────────────────────────
+  brp:
+    - label: BRP Gewaspercelen 2024 WFS
+      endpoint: "https://service.pdok.nl/rvo/brpgewaspercelen/wfs/v1_0"
+      service_type: WFS
+      source_version: "BRP 2024"
+      update_cadence: jaarlijks
+      cql_filter: true
+      default_crs: "EPSG:28992"
+      note: "Filter op jaar=2024 via CQL_FILTER — werkt bij RVO (niet tile-cached)"
+
+  # ── Topotijdreis ───────────────────────────────────────────────────────────
+  topotijdreis:
+    - label: Topotijdreis WMTS (BRT historisch)
+      endpoint: "https://services.pdok.nl/brt/topotijdreis/wmts/v1_0"
+      service_type: WMS
+      source_version: "Topotijdreis 1815–heden"
+      update_cadence: onregelmatig
+      note: "Registreer als .qlr in QGIS — geen vectordownload"
+
+  # ── Locatieserver — geocoding adres/plaats/BAG/BRK ────────────────────────
+  locatieserver:
+    - label: PDOK Locatieserver (free search)
+      endpoint: "https://api.pdok.nl/bzk/locatieserver/search/v3_1/free"
+      service_type: REST
+      source_version: "BAG + BRK (vorige kalenderdag)"
+      update_cadence: dagelijks
+      auth_required: false
+      module: "geo_stack.skills.locatieserver.geocode"
+      supported_types:
+        - adres
+        - gemeente
+        - woonplaats
+        - weg
+        - postcode
+        - perceel
+        - hectometer
+        - buurt
+        - wijk
+        - waterschapsgebied
+        - provincie
+        - appartement
+      note: |
+        Filter via parameter ``fq=type:<type>``. Resultaten bevatten zowel
+        ``centroide_rd`` (snel) als optioneel ``geometrie_rd`` via lookup-call.
+        Max 100 rows per request.
+    - label: PDOK Locatieserver (lookup per id)
+      endpoint: "https://api.pdok.nl/bzk/locatieserver/search/v3_1/lookup"
+      service_type: REST
+      source_version: "BAG + BRK (vorige kalenderdag)"
+      update_cadence: dagelijks
+      note: "Gebruikt door geocode(full_geometry=True) om polygonen op te halen"
+
+  # ── Kadaster / BRK ─────────────────────────────────────────────────────────
+  kadaster:
+    - label: BRK Kadastrale Kaart WFS
+      endpoint: "https://service.pdok.nl/kadaster/kadastralekaart/wfs/v5_0"
+      service_type: WFS
+      source_version: "BRK 2025-Q1"
+      update_cadence: dagelijks
+      cql_filter: false
+      warning: "tile-cached — CQL_FILTER wordt stil genegeerd; gebruik BBOX + client-side filter"
+
+    - label: PDOK Locatieserver (percelen + geocoding)
+      endpoint: "https://api.pdok.nl/bzk/locatieserver/search/v3_1"
+      service_type: REST
+      source_version: "DKK vorige kalenderdag"
+      update_cadence: dagelijks
+
+  # ── 3DBAG ──────────────────────────────────────────────────────────────────
+  bag_3d:
+    - label: 3DBAG GPKG (cloud-native)
+      service_type: CLOUD_NATIVE
+      source_version: "3DBAG v20250903"
+      update_cadence: per release (~kwartaal)
+      cloud_native_url: "https://data.3dbag.nl/v20250903/3dbag_nl.gpkg.zip"
+      internal_file: "3dbag_nl.gpkg"
+      layers:
+        - lod22_2d
+        - pand
+
+  # ── BAG ────────────────────────────────────────────────────────────────────
+  bag:
+    - label: BAG Light GPKG (cloud-native)
+      service_type: CLOUD_NATIVE
+      source_version: "BAG 2025-Q1"
+      update_cadence: maandelijks
+      cloud_native_url: "https://service.pdok.nl/lv/bag/atom/v1_0/downloads/bag-light.gpkg"
+      layers:
+        - verblijfsobject
+        - pand
+        - nummeraanduiding
+        - openbareruimte
+        - woonplaats
+
+  # ── CBS ────────────────────────────────────────────────────────────────────
+  cbs:
+    - label: CBS Wijken en Buurten WFS
+      endpoint: "https://service.pdok.nl/cbs/wijkenbuurten/2024/wfs/v1_0"
+      service_type: WFS
+      source_version: "CBS 2024"
+      update_cadence: jaarlijks
+      cql_filter: false
+      warning: "Filter niet werkend — download alle gemeenten, filter lokaal op statnaam"
+
+  # ── TOP10NL ────────────────────────────────────────────────────────────────
+  top10nl:
+    - label: BRT TOP10NL WFS
+      endpoint: "https://service.pdok.nl/brt/top10nl/wfs/v1_0"
+      service_type: WFS
+      source_version: "BRT TOP10NL 2025-Q1"
+      update_cadence: kwartaal
+      cql_filter: true
+      default_crs: "EPSG:28992"
+
+  # ── NDVI / Sentinel-2 (STAC) ──────────────────────────────────────────────
+  ndvi:
+    - label: Element84 Earth Search (Sentinel-2 L2A)
+      endpoint: "https://earth-search.aws.element84.com/v1"
+      service_type: STAC
+      collection: "sentinel-2-l2a"
+      source_version: "Sentinel-2 L2A (ESA)"
+      update_cadence: continu
+
+    - label: Microsoft Planetary Computer
+      endpoint: "https://planetarycomputer.microsoft.com/api/stac/v1"
+      service_type: STAC
+      collection: "sentinel-2-l2a"
+      source_version: "Sentinel-2 L2A (ESA)"
+      update_cadence: continu
+
+  # ── KNMI (Klimatologie) ────────────────────────────────────────────────────
+  knmi:
+    - label: KNMI dagwaarden
+      endpoint: "https://daggegevens.knmi.nl/klimatologie/daggegevens"
+      service_type: REST
+      source_version: "KNMI dagwaarden v2"
+      update_cadence: dagelijks
+      auth_required: false
+      module: "geo_stack.skills.knmi.fetch_knmi_dagwaarden"
+      variables:
+        RD: "Neerslag (0.1 mm/dag, -1 = ontbrekend)"
+        EV24: "Makkink referentiegewasverdamping (0.1 mm/dag)"
+      note: |
+        Klimaatstations leveren RD + EV24; neerslagstations alleen RD.
+        Voor PASTAS RechargeModel: kies klimaatstation dichtbij de AOI.
+
+  # ── BRO Grondwatermonitoring (peilbuizen + tijdreeksen) ───────────────────
+  bro_peilbuizen:
+    - label: BRO GMW peilbuispunten (WFS)
+      endpoint: "https://service.pdok.nl/bzk/bro-grondwaterstandonderzoek/wfs/v1_0"
+      service_type: WFS
+      source_version: "BRO GMW"
+      update_cadence: dagelijks
+      default_crs: "EPSG:28992"
+      typename: "gld:Monitoringwell"
+      module: "geo_stack.skills.bro.peilbuizen.fetch_peilbuizen"
+    - label: BRO GLD tijdreeksen (REST per id)
+      endpoint: "https://publiek.broservices.nl/gm/gld/v1/objects/{gld_id}"
+      service_type: REST
+      source_version: "BRO GLD v1"
+      update_cadence: dagelijks
+      module: "geo_stack.skills.bro.peilbuizen.fetch_gld_timeseries"
+      note: |
+        XML-respons; geen WFS. Filter via tmin/tmax client-side.
+        Voor productie-pipelines: overweeg ``hydropandas`` als wrapper.
+
+  # ── FGR (Fysisch-geografische regio's) ─────────────────────────────────────
+  fgr:
+    - label: FGR WMS (register als .qlr)
+      endpoint: "https://service.pdok.nl/rvo/fgr/wms/v1_0"
+      service_type: WMS
+      source_version: "FGR 2020"
+      update_cadence: onbekend
+      note: "Niet downloaden — registreer als .qlr referentie"
+    - label: FGR WFS (vectordownload, gebruikt door landschapsleutel-skill)
+      endpoint: "https://service.pdok.nl/rvo/fgr/wfs/v1_0"
+      service_type: WFS
+      source_version: "FGR 2020"
+      update_cadence: onbekend
+      default_crs: "EPSG:28992"
+      typename: "fgr:FysischGeografischeRegio"
+      module: "geo_stack.skills.landschapsleutel.classify_landscape"
+      note: |
+        Parallel WFS naast de WMS. Wordt door classify_landscape gecombineerd
+        met BRO Bodemkaart 1:50.000 voor een benadering van de Landschapssleutel.
+        Endpoint overrideable via parameter fgr_endpoint.
+
+  # ── Landschapssleutel (benadering via FGR + bodemkaart) ───────────────────
+  landschapsleutel:
+    - label: FGR + BRO Bodemkaart (classify_landscape)
+      service_type: COMPOSITE
+      source_version: "FGR 2020 + BRO Bodemkaart 1:50.000 v2025"
+      update_cadence: onregelmatig
+      default_crs: "EPSG:28992"
+      module: "geo_stack.skills.landschapsleutel.classify_landscape"
+      sources:
+        fgr: "https://service.pdok.nl/rvo/fgr/wfs/v1_0"
+        bodemkaart: "https://maps.bodemdata.nl/geoserver/wfs"
+      output_columns:
+        - fgr_regio
+        - fgr_sectie
+        - fgr_serie
+        - bodemtype
+        - gt_klasse
+      note: |
+        Benadering van de WUR Landschapssleutel (2014) op basis van twee
+        publieke GIS-lagen: FGR-regio's + BRO bodemtype/grondwatertrap.
+        De volledige Landschapssleutel integreert ook reliëf, hydrologische
+        context en historisch landgebruik — gebruik deze module als eerste
+        schets, niet als definitieve classificatie.
+
+  # ── GEE (Google Earth Engine) ──────────────────────────────────────────────
+  gee:
+    - label: AlphaEarth Satellite Embeddings (annual, 64-band)
+      endpoint: "GOOGLE/SATELLITE_EMBEDDING/V1/ANNUAL"
+      service_type: GEE
+      source_version: "V1 (Google/DeepMind)"
+      update_cadence: jaarlijks
+      bands: 64
+      resolution_m: 10
+      output_crs: "EPSG:32631"
+      auth_required: true
+      auth_methods:
+        - "user: earthengine authenticate (interactief)"
+        - "service_account: ee.ServiceAccountCredentials(key_file=...)"
+      module: "geo_stack.skills.gee.fetch_alpha_earth"
+      note: |
+        Skipt Google Drive — gebruikt ee.data.computePixels in tegels.

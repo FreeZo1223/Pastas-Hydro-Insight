@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "lesa": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--project",
+        "C:\\GIS_Projecten\\lesa-agent-v2",
+        "python",
+        "-m",
+        "lesa_agent.mcp.server"
+      ],
+      "cwd": "C:\\GIS_Projecten\\lesa-agent-v2"
+    }
+  }
+}

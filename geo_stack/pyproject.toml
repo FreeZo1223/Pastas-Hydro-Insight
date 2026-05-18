@@ -1,0 +1,47 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "geo-stack-nl"
+version = "0.2.1"
+description = "Domein-neutrale geo data-fetch laag voor Nederlandse services (PDOK, BRO, STAC)"
+requires-python = ">=3.11"
+dependencies = [
+    "geopandas>=0.14",
+    "requests>=2.31",
+    "urllib3>=2.0",
+    "shapely>=2.0",
+    "pyproj>=3.6",
+    "rasterio>=1.3",
+    "pyogrio>=0.7",
+    "pyyaml>=6.0",
+    "httpx>=0.27",
+    "pyarrow>=15.0",
+]
+
+[project.optional-dependencies]
+stac = [
+    "pystac-client>=0.7",
+    "stackstac>=0.4",
+    "xarray>=2024.1",
+    "dask>=2024.1",
+]
+cloud = ["duckdb>=1.0"]
+gee = ["earthengine-api>=0.1.380"]
+all = [
+    "geo-stack-nl[stac,cloud,gee]",
+]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.23", "pytest-httpx>=0.30"]
+
+[project.urls]
+Repository = "https://github.com/frisoschutten/geo-stack-nl"
+
+[tool.hatch.build.targets.wheel]
+packages = ["geo_stack"]
+
+[tool.pytest.ini_options]
+markers = [
+    "unit: unit tests (geen netwerk)",
+    "integration: integration tests (netwerk vereist)",
+]

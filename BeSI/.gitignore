@@ -1,0 +1,63 @@
+# .gitignore — BeSI Analyse Tool
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+
+# Output — nooit data committen, alleen code
+output/
+Output/
+*.tif
+*.tiff
+*.geotiff
+*.vrt
+*.gpkg
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+*.sbn
+*.sbx
+
+# Grote databestanden
+*.zip
+*.gz
+*.csv.gz
+data/
+Data/
+
+# Wél committen: de kleine metadata CSV in config/
+!config/species_metadata.csv
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Jupyter (voor het geval je notebooks gebruikt)
+.ipynb_checkpoints/
+*.ipynb
+
+# run metadata (projectspecifiek, niet in versiebeheer)
+run_metadata.json

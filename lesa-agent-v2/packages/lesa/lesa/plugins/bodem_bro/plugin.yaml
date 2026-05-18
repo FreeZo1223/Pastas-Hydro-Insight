@@ -1,0 +1,17 @@
+id: bodem_bro
+version: "0.1.0"
+name: "Bodem — BRO Bodemkaart 1:50.000"
+description: >
+  Haalt bodemtypen op uit de BRO Bodemkaart 1:50.000 voor de AOI.
+  Bepaalt het dominante bodemtype, veenaanwezigheid en bodemgeschiktheid
+  als context voor hydrologische en vegetatieanalyse.
+rangorde_position: 3
+landscape_types:
+  - duinen
+  - beekdal
+  - veen
+  - zandlandschap
+  - klei
+prerequisites:
+  - geomorfologie_ahn
+python_class: "lesa.plugins.bodem_bro.plugin:BodemBroPlugin"
