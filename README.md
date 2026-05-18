@@ -19,19 +19,58 @@ met Menyanthes en Hydromonitor werkte.
 4. QGIS       →   ruimtelijke verbeelding van resultaten
 ```
 
-## Vereisten
+## Eenmalige machine-setup
 
-- **Python 3.12** (3.13 mag ook)
-- **uv** package-manager: <https://docs.astral.sh/uv/getting-started/installation/>
-- Anthropic API-key voor de LESA-agent (zie `.env.example`)
+Twee dingen heb je op je werkmachine nodig — daarna doet `uv sync` de rest.
 
-## Installatie
+### 1. Python 3.12 (of 3.13)
+
+Controleer eerst of je Python al hebt:
+
+```powershell
+python --version
+```
+
+Krijg je `Python 3.12.x` of `3.13.x` terug → klaar. Anders installeren:
+
+- **Windows:** `winget install -e --id Python.Python.3.12` (of download van
+  <https://www.python.org/downloads/>)
+- **macOS:** `brew install python@3.12`
+- **Linux:** via je package-manager of `pyenv`
+
+### 2. uv package-manager
+
+`uv` regelt de venv, installeert alle dependencies en draait commando's.
+Installatie:
+
+- **Windows (PowerShell):**
+  ```powershell
+  powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+  ```
+  of `winget install astral-sh.uv`
+- **macOS / Linux:**
+  ```bash
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  ```
+
+Controleer:
+
+```bash
+uv --version
+```
+
+### 3. (Optioneel) Anthropic API-key
+
+Alleen nodig als je de **LESA-agent** wilt draaien (niet voor pastasdash).
+Verkrijg via <https://console.anthropic.com/>; zet in je `.env`.
+
+## Project installeren
 
 ```bash
 git clone https://github.com/<jij>/GIS-projecten.git
 cd GIS-projecten
 uv sync                              # installeert álle workspace-packages
-cp .env.example .env                 # vul ANTHROPIC_API_KEY in
+cp .env.example .env                 # vul ANTHROPIC_API_KEY in (optioneel)
 ```
 
 Eén `uv sync` installeert alles wat je nodig hebt: `geo_stack`, `BeSI`,
@@ -59,28 +98,49 @@ om een gebiedsbeschrijving op te bouwen. Sessies komen onder `sessions/`.
 
 Tip: typ `quit` om te eindigen, alle tussenresultaten blijven bewaard.
 
-## PASTAS-modellen inspecteren
+## PastasDash — peilbuizen analyseren
 
-Na een LESA-run met de grondwater-plugin staat er een PastaStore klaar onder:
+Twee paden, beide met hetzelfde eindresultaat in de browser op
+<http://127.0.0.1:8050/>:
 
-```
-sessions/<sessie-id>/data/grondwater_pastas/pastastore/lesa_<id>/
-```
-
-Open die in PastasDash:
+### A. Direct uit BRO-uitgifteloket (snelst voor losse analyse)
 
 ```bash
-uv run pastasdash
-# Open http://127.0.0.1:8050 in de browser
-# Klik "Load Pastastore" → navigeer naar het pad hierboven
+uv run pastasdash       # start de browser-GUI op localhost:8050
 ```
 
-Pastasdash toont:
+In de dashboard: klik **Load Pastastore** → selecteer de ZIP die je
+download van <https://www.broloket.nl/> (sleep een gebied, vraag aan,
+ontvang `…@…_<datum>.zip`). PastasDash herkent het BRO-Loket-format
+automatisch, parsed XML's + GLD-CSV's, vraagt KNMI op voor het
+dichtstbijzijnde klimaatstation en bouwt in-memory een PastaStore.
 
-- Kaart met peilbuislocaties
-- Tijdreeksen per peilbuis (oseries)
-- KNMI neerslag + verdamping (stresses)
-- Gefitte PASTAS-modellen met diagnostiek
+> Eerste keer duurt ~10 seconden door de KNMI-fetch. Resultaat is niet
+> bewaard — herstarten = opnieuw bouwen. Voor herbruikbare stores: zie B.
+
+### B. Via LESA-agent of CLI-converter (resultaat bewaard)
+
+Voor een herbruikbaar `.zip` met PASTAS-modellen al meegerekend:
+
+```bash
+uv run lesa-bro-to-pastastore <bro-loket.zip> --fit-models
+# -> schrijft <bro-loket>_pastastore.zip naast de input
+uv run pastasdash
+# upload _pastastore.zip in de dashboard
+```
+
+Of via de LESA-agent (zie hierboven): na een agent-sessie staat er
+automatisch een PastaStore-ZIP onder
+`sessions/<sessie-id>/data/grondwater_pastas/pastastore/...`.
+
+### Wat je in het dashboard ziet
+
+| Tab | Inhoud |
+|---|---|
+| **Overview** | Tabel met alle peilbuizen + KNMI-stresses, hun metadata |
+| **Maps** | Kaart met peilbuislocaties (RD-coords uit GMW-XML's) |
+| **Model** | Per peilbuis: PASTAS-fit, simulatie vs metingen, parameters, R² |
+| **Compare** | Meerdere modellen naast elkaar |
 
 ## Workspace-structuur
 
