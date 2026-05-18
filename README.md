@@ -36,7 +36,13 @@ cp .env.example .env                 # vul ANTHROPIC_API_KEY in
 
 Eén `uv sync` installeert alles wat je nodig hebt: `geo_stack`, `BeSI`,
 `lesa`, `lesa_agent`, `pastas_adapter` en `pastasdash`. Plus alle externe
-afhankelijkheden zoals `pastas`, `pastastore`, `geopandas`, `rasterio`.
+afhankelijkheden zoals `pastas`, `pastastore`, `hydropandas`, `geopandas`,
+`rasterio`.
+
+KNMI- en BRO-data worden bij voorkeur opgehaald via **hydropandas**
+(robuuste retry + KNMI Data Platform fallback). De directe REST-route blijft
+beschikbaar als reserve. Grondwaterstand-ID's mogen zowel `GLD…` als `GMW…`
+zijn — hydropandas dispatchet automatisch.
 
 ## LESA-sessie starten
 

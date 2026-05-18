@@ -218,6 +218,41 @@ def _delivered_location_rd(gmw: "ET.Element") -> tuple[float | None, float | Non
 
 # ── REST: tijdreeks per GLD-id ───────────────────────────────────────────────
 
+def fetch_groundwater_obs(
+    bro_id: str,
+    *,
+    tube_nr: int | None = None,
+    tmin: str | datetime | None = "1900-01-01",
+    tmax: str | datetime | None = "2040-01-01",
+) -> "pd.DataFrame":
+    """Fetch grondwaterstandreeks via hydropandas (BRO-REST).
+
+    Werkt voor zowel **GLD**-id's als **GMW**-id's (laatste vereist ``tube_nr``).
+    Hydropandas voegt automatisch metadata toe: ``x``, ``y``, ``ground_level``,
+    ``screen_top``, ``screen_bottom``, ``unit`` (m NAP).
+
+    Returns
+    -------
+    hydropandas.GroundwaterObs
+        DataFrame met kolom ``values`` (m NAP). Heeft attributes ``x``, ``y``,
+        ``name``, ``ground_level`` etc. voor direct gebruik in PastaStore.
+    """
+    try:
+        import hydropandas as hpd
+    except ImportError as exc:
+        raise ImportError(
+            "hydropandas niet geïnstalleerd; gebruik fetch_gld_timeseries() of "
+            "installeer met 'uv add hydropandas'."
+        ) from exc
+
+    return hpd.GroundwaterObs.from_bro(
+        bro_id=bro_id,
+        tube_nr=tube_nr,
+        tmin=tmin,
+        tmax=tmax,
+    )
+
+
 def fetch_gld_timeseries(
     gld_id: str,
     *,

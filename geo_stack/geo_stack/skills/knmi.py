@@ -22,7 +22,7 @@ import logging
 import math
 import urllib.request
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -222,12 +222,93 @@ def fetch_recharge_inputs(
     *,
     start: str | datetime = "19900101",
     end: str | datetime | None = None,
+    prefer: str = "hydropandas",
 ) -> tuple["pd.Series", "pd.Series"]:
     """Convenience: haal neerslag + verdamping op in één call.
 
+    Probeert standaard eerst ``hydropandas`` (robuuster: retry-logica,
+    Data Platform API als fallback bij endpoint-issues), valt terug op
+    de directe urllib-route bij ImportError of falen.
+
+    Parameters
+    ----------
+    station
+        Station-ID (bijv. ``"260"``).
+    start, end
+        Begin/einddatum.
+    prefer
+        ``"hydropandas"`` (default) of ``"direct"`` om de directe API te
+        forceren. De andere blijft altijd beschikbaar als fallback.
+
     Returns
     -------
-    (neerslag_mm, verdamping_mm)
+    (neerslag_mm_per_dag, verdamping_mm_per_dag)
+        Index = ``DatetimeIndex`` (datum, genormaliseerd op middernacht).
     """
+    if prefer == "hydropandas":
+        try:
+            return _fetch_recharge_via_hpd(station, start=start, end=end)
+        except (ImportError, ConnectionError) as exc:
+            log.warning("hydropandas-fetch faalde, fallback naar directe API: %s", exc)
     df = fetch_knmi_dagwaarden(station, variables="RD,EV24", start=start, end=end)
     return to_neerslag_mm(df), to_verdamping_mm(df)
+
+
+def _fetch_recharge_via_hpd(
+    station: str,
+    *,
+    start: str | datetime,
+    end: str | datetime | None,
+) -> tuple["pd.Series", "pd.Series"]:
+    """Haal neerslag + Makkink-verdamping op via hydropandas.
+
+    Hydropandas wrapt de KNMI-endpoints en doet retry-logica en eenheids-
+    conversie (waarden komen terug in meters; wij rekenen om naar mm/dag).
+    Index wordt genormaliseerd naar dag-precisie zodat de reeks 1-op-1
+    aansluit op de directe-API output.
+    """
+    import pandas as pd
+
+    try:
+        import hydropandas as hpd
+    except ImportError as exc:
+        raise ImportError(
+            "hydropandas niet geïnstalleerd; gebruik prefer='direct' of "
+            "installeer met 'uv add hydropandas'."
+        ) from exc
+
+    stn_int = int(station)
+    end_eff = end if end is not None else datetime.now()
+    try:
+        prec_obs = hpd.PrecipitationObs.from_knmi(
+            stn=stn_int, start=start, end=end_eff, meteo_var="RH",
+        )
+        evap_obs = hpd.EvaporationObs.from_knmi(
+            stn=stn_int, start=start, end=end_eff, meteo_var="EV24",
+        )
+    except Exception as exc:  # noqa: BLE001 — wrap into ConnectionError voor consistent gedrag
+        raise ConnectionError(f"hydropandas KNMI-fetch faalde voor station {station}: {exc}") from exc
+
+    prec = _hpd_obs_to_mm_series(prec_obs, value_col="RH", name="Neerslag_mm")
+    evap = _hpd_obs_to_mm_series(evap_obs, value_col="EV24", name="Verdamping_mm")
+    return prec, evap
+
+
+def _hpd_obs_to_mm_series(obs: Any, *, value_col: str, name: str) -> "pd.Series":  # noqa: ANN401
+    """Normaliseer een hydropandas-Obs (DataFrame in meters) naar mm/dag-Series.
+
+    Hydropandas levert waarden in meters terug met een DatetimeIndex op
+    01:00:00 (KNMI-conventie: meting omstreeks 0900 UTC = volgende dag).
+    We zetten om naar mm en normaliseren de index op middernacht.
+    """
+    import pandas as pd
+
+    if value_col not in obs.columns:
+        raise ValueError(f"Verwachtte kolom '{value_col}' in hydropandas-Obs, kreeg {list(obs.columns)}")
+    s = obs[value_col].astype(float) * 1000.0  # m -> mm
+    s.index = pd.to_datetime(s.index).normalize()
+    s.index.name = "Datum"
+    s.name = name
+    return s
+
+

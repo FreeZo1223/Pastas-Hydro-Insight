@@ -12,6 +12,7 @@ dependencies = [
     "pandas>=2.0",
     "pastas>=1.13",
     "pastastore>=1.8",
+    "hydropandas>=0.10",
 ]
 
 [project.optional-dependencies]

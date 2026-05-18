@@ -118,22 +118,29 @@ class GrondwaterPastasPlugin:
             log.warning("KNMI-fetch faalde: %s", exc)
             metadata["knmi_error"] = str(exc)
 
-        # 3. GLD-tijdreeksen voor opgegeven IDs
+        # 3. Grondwater-tijdreeksen voor opgegeven IDs
+        # Accepteert zowel GLD- als GMW-id's (GMW vereist filter 1 als default).
         gld_series: dict[str, pd.Series] = {}
-        for gld_id in params.gld_ids:
+        gld_coords: dict[str, tuple[float, float]] = {}
+        for bro_id in params.gld_ids:
             try:
-                s = fetch_gld_timeseries(gld_id, tmin=params.tmin, tmax=params.tmax)
-                if len(s) > 0:
-                    gld_path = artifact_dir / f"{gld_id}.csv"
-                    s.to_csv(gld_path, header=True)
-                    files[f"gld_{gld_id}"] = str(gld_path)
-                    gld_series[gld_id] = s
-                else:
-                    log.warning("GLD %s leeg", gld_id)
+                s, coords = self._fetch_groundwater_series(
+                    bro_id, tmin=params.tmin, tmax=params.tmax,
+                )
+                if s is None or len(s) == 0:
+                    log.warning("%s leeg of geen data", bro_id)
+                    continue
+                csv_path = artifact_dir / f"{bro_id}.csv"
+                s.to_csv(csv_path, header=True)
+                files[f"gld_{bro_id}"] = str(csv_path)
+                gld_series[bro_id] = s
+                if coords is not None:
+                    gld_coords[bro_id] = coords
             except Exception as exc:  # noqa: BLE001
-                log.warning("GLD %s fetch faalde: %s", gld_id, exc)
+                log.warning("%s fetch faalde: %s", bro_id, exc)
 
         metadata["n_gld_reeksen"] = len(gld_series)
+        metadata["gld_coords"] = gld_coords
 
         raw = PluginRawData(files=files, metadata=metadata)
         # In-memory frames voor analyze (worden niet geserialiseerd)
@@ -389,6 +396,8 @@ class GrondwaterPastasPlugin:
 
         peilbuizen = raw.get_frame("peilbuizen")
         coord_lookup = self._coord_lookup_from_peilbuizen(peilbuizen)
+        # Coords uit hydropandas-fetch hebben voorrang (per-buis exact)
+        coord_lookup.update(raw.metadata.get("gld_coords", {}))
         cx_default, cy_default = self._aoi_centroid_rd(inputs)
 
         for key in list(raw._frames.keys()):
@@ -414,6 +423,50 @@ class GrondwaterPastasPlugin:
                 log.warning("PastaStore-oseries %s faalde: %s", gld_id, exc)
 
         return adapter
+
+    def _fetch_groundwater_series(
+        self,
+        bro_id: str,
+        *,
+        tmin: str,
+        tmax: str | None,
+    ) -> tuple[Any | None, tuple[float, float] | None]:
+        """Haal een grondwaterstandreeks op voor een GLD- of GMW-id.
+
+        Probeert eerst hydropandas (geeft x, y mee als metadata). Valt
+        terug op de directe REST-route voor GLD-id's wanneer hydropandas
+        ontbreekt of faalt.
+
+        Returns
+        -------
+        (series_or_none, coords_or_none)
+            Series in m NAP met DatetimeIndex; coords als (x, y) in RD.
+        """
+        # Pad 1: hydropandas (werkt voor GLD én GMW, geeft directe metadata)
+        try:
+            from geo_stack.skills.bro.peilbuizen import fetch_groundwater_obs
+
+            tube_nr = 1 if bro_id.startswith("GMW") else None
+            obs = fetch_groundwater_obs(bro_id, tube_nr=tube_nr, tmin=tmin, tmax=tmax or "2040-01-01")
+            if obs.empty:
+                return None, None
+            value_col = "values" if "values" in obs.columns else obs.columns[0]
+            s = obs[value_col].astype(float).copy()
+            s.name = bro_id
+            coords = (float(obs.x), float(obs.y)) if getattr(obs, "x", None) and getattr(obs, "y", None) else None
+            return s, coords
+        except ImportError:
+            pass  # geen hpd → fall back naar urllib voor GLD
+        except Exception as exc:  # noqa: BLE001
+            log.info("hydropandas-fetch faalde voor %s: %s — fallback naar REST", bro_id, exc)
+
+        # Pad 2: directe REST (alleen voor GLD)
+        if not bro_id.startswith("GLD"):
+            return None, None
+        from geo_stack.skills.bro.peilbuizen import fetch_gld_timeseries
+
+        s = fetch_gld_timeseries(bro_id, tmin=tmin, tmax=tmax)
+        return (s if len(s) > 0 else None), None
 
     def _aoi_centroid_rd(self, inputs: PluginInputs) -> tuple[float, float]:
         from shapely.geometry import shape
