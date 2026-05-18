@@ -16,6 +16,7 @@ dependencies = [
 
 [project.scripts]
 lesa-agent = "lesa_agent.cli:main"
+lesa-bro-to-pastastore = "lesa_agent.bro_loket_cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["lesa_agent"]

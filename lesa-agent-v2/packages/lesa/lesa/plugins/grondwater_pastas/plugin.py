@@ -121,10 +121,10 @@ class GrondwaterPastasPlugin:
         # 3. Grondwater-tijdreeksen voor opgegeven IDs
         # Accepteert zowel GLD- als GMW-id's (GMW vereist filter 1 als default).
         gld_series: dict[str, pd.Series] = {}
-        gld_coords: dict[str, tuple[float, float]] = {}
+        gld_meta: dict[str, dict[str, Any]] = {}
         for bro_id in params.gld_ids:
             try:
-                s, coords = self._fetch_groundwater_series(
+                s, hpd_meta = self._fetch_groundwater_series(
                     bro_id, tmin=params.tmin, tmax=params.tmax,
                 )
                 if s is None or len(s) == 0:
@@ -134,13 +134,13 @@ class GrondwaterPastasPlugin:
                 s.to_csv(csv_path, header=True)
                 files[f"gld_{bro_id}"] = str(csv_path)
                 gld_series[bro_id] = s
-                if coords is not None:
-                    gld_coords[bro_id] = coords
+                if hpd_meta:
+                    gld_meta[bro_id] = hpd_meta
             except Exception as exc:  # noqa: BLE001
                 log.warning("%s fetch faalde: %s", bro_id, exc)
 
         metadata["n_gld_reeksen"] = len(gld_series)
-        metadata["gld_coords"] = gld_coords
+        metadata["gld_meta"] = gld_meta
 
         raw = PluginRawData(files=files, metadata=metadata)
         # In-memory frames voor analyze (worden niet geserialiseerd)
@@ -281,6 +281,12 @@ class GrondwaterPastasPlugin:
                 "PASTAS-modellering — fit_pastas_models stond op False"
             )
 
+        # ── PastaStore naar ZIP voor pastasdash-upload ──────────────────────
+        if adapter is not None:
+            zip_path = self._zip_pastastore(adapter, artifacts)
+            if zip_path is not None:
+                artifacts["pastastore_zip"] = str(zip_path)
+
         # ── Scope ───────────────────────────────────────────────────────────
         uncertainty_level: str = (
             "laag" if (n_pbz > 0 and knmi_records > 0) else
@@ -339,6 +345,18 @@ class GrondwaterPastasPlugin:
         lon, lat = transformer.transform(cx, cy)
         return lat, lon
 
+    def _zip_pastastore(self, adapter: Any, artifacts: dict[str, str]) -> Path | None:
+        """Pack de PastaStore in een ZIP zodat pastasdash hem kan uploaden."""
+        try:
+            store = adapter.open()
+            store_root = Path(adapter.location.path) / adapter.location.name
+            zip_path = store_root.parent / f"{adapter.location.name}.zip"
+            store.to_zip(str(zip_path), overwrite=True)
+            return zip_path
+        except Exception as exc:  # noqa: BLE001
+            log.warning("PastaStore-zip schrijven faalde: %s", exc)
+            return None
+
     def _build_pastastore(
         self,
         inputs: PluginInputs,
@@ -396,8 +414,8 @@ class GrondwaterPastasPlugin:
 
         peilbuizen = raw.get_frame("peilbuizen")
         coord_lookup = self._coord_lookup_from_peilbuizen(peilbuizen)
-        # Coords uit hydropandas-fetch hebben voorrang (per-buis exact)
-        coord_lookup.update(raw.metadata.get("gld_coords", {}))
+        # Coords + filterdiepten uit hydropandas-fetch hebben voorrang
+        gld_meta_lookup: dict[str, dict[str, Any]] = raw.metadata.get("gld_meta", {})
         cx_default, cy_default = self._aoi_centroid_rd(inputs)
 
         for key in list(raw._frames.keys()):
@@ -407,18 +425,25 @@ class GrondwaterPastasPlugin:
             oseries = raw.get_frame(key)
             if oseries is None or oseries.empty:
                 continue
-            x, y = coord_lookup.get(gld_id, (cx_default, cy_default))
+
+            hpd_meta = gld_meta_lookup.get(gld_id, {})
+            x = hpd_meta.get("x") or coord_lookup.get(gld_id, (cx_default, cy_default))[0]
+            y = hpd_meta.get("y") or coord_lookup.get(gld_id, (cx_default, cy_default))[1]
+            os_meta: dict[str, Any] = {
+                "x": float(x),
+                "y": float(y),
+                "unit": hpd_meta.get("unit", "m NAP"),
+                "bron": hpd_meta.get("source", "BRO"),
+            }
+            # Verplichte velden voor pastasdash (PastaStoreInterface)
+            for opt in ("screen_top", "screen_bottom", "ground_level", "tube_top", "tube_nr"):
+                if opt in hpd_meta:
+                    os_meta[opt] = hpd_meta[opt]
+            # Fallback zodat pastasdash niet weigert: NaN als we het niet weten
+            os_meta.setdefault("screen_top", float("nan"))
+            os_meta.setdefault("screen_bottom", float("nan"))
             try:
-                adapter.add_oseries(
-                    name=gld_id,
-                    series=oseries,
-                    metadata={
-                        "x": float(x),
-                        "y": float(y),
-                        "eenheid": "m NAP",
-                        "bron": "BRO GLD",
-                    },
-                )
+                adapter.add_oseries(name=gld_id, series=oseries, metadata=os_meta)
             except Exception as exc:  # noqa: BLE001
                 log.warning("PastaStore-oseries %s faalde: %s", gld_id, exc)
 
@@ -430,17 +455,18 @@ class GrondwaterPastasPlugin:
         *,
         tmin: str,
         tmax: str | None,
-    ) -> tuple[Any | None, tuple[float, float] | None]:
+    ) -> tuple[Any | None, dict[str, Any] | None]:
         """Haal een grondwaterstandreeks op voor een GLD- of GMW-id.
 
-        Probeert eerst hydropandas (geeft x, y mee als metadata). Valt
-        terug op de directe REST-route voor GLD-id's wanneer hydropandas
-        ontbreekt of faalt.
+        Probeert eerst hydropandas (geeft x, y + filterdiepten mee als
+        metadata). Valt terug op de directe REST-route voor GLD-id's
+        wanneer hydropandas ontbreekt of faalt.
 
         Returns
         -------
-        (series_or_none, coords_or_none)
-            Series in m NAP met DatetimeIndex; coords als (x, y) in RD.
+        (series_or_none, metadata_or_none)
+            Series in m NAP met DatetimeIndex; metadata-dict met o.a.
+            ``x``, ``y``, ``screen_top``, ``screen_bottom``, ``ground_level``.
         """
         # Pad 1: hydropandas (werkt voor GLD én GMW, geeft directe metadata)
         try:
@@ -453,8 +479,13 @@ class GrondwaterPastasPlugin:
             value_col = "values" if "values" in obs.columns else obs.columns[0]
             s = obs[value_col].astype(float).copy()
             s.name = bro_id
-            coords = (float(obs.x), float(obs.y)) if getattr(obs, "x", None) and getattr(obs, "y", None) else None
-            return s, coords
+            meta: dict[str, Any] = {}
+            for attr in ("x", "y", "screen_top", "screen_bottom",
+                         "ground_level", "tube_top", "tube_nr", "unit", "source"):
+                val = getattr(obs, attr, None)
+                if val is not None and not (isinstance(val, float) and val != val):
+                    meta[attr] = val
+            return s, meta
         except ImportError:
             pass  # geen hpd → fall back naar urllib voor GLD
         except Exception as exc:  # noqa: BLE001
@@ -526,6 +557,11 @@ class GrondwaterPastasPlugin:
         if neerslag is None or verdamping is None:
             not_tested.append("PASTAS-fit overgeslagen: KNMI-stresses ontbreken")
             return
+
+        # Stress-namen moeten matchen met PastaStore-keys ("neerslag_KNMI",
+        # "verdamping_KNMI"), anders weigert pastastore het model toe te voegen.
+        neerslag = neerslag.rename("neerslag_KNMI") if neerslag.name != "neerslag_KNMI" else neerslag
+        verdamping = verdamping.rename("verdamping_KNMI") if verdamping.name != "verdamping_KNMI" else verdamping
 
         fit_results: list[dict[str, Any]] = []
         for gld_id in params.gld_ids:

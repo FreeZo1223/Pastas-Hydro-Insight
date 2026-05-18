@@ -73,9 +73,30 @@ def fit_oseries(
     if rfunc_cls is None:
         raise ValueError(f"Onbekende rfunc '{config.rfunc}'. Zie pastas.rfunc.")
 
-    for stress_name, stress in stresses.items():
-        sm = ps.StressModel(stress, rfunc=rfunc_cls(), name=stress_name)
-        ml.add_stressmodel(sm)
+    # Bij twee herkenbare stresses (neerslag + verdamping) maken we een
+    # RechargeModel — hydrologisch correcter dan twee losse StressModels.
+    has_prec = "neerslag" in stresses
+    has_evap = "verdamping" in stresses
+    if has_prec and has_evap and len(stresses) == 2:
+        rm = ps.RechargeModel(
+            prec=stresses["neerslag"],
+            evap=stresses["verdamping"],
+            rfunc=rfunc_cls(),
+            name="recharge",
+            settings=("prec", "evap"),
+        )
+        ml.add_stressmodel(rm)
+    else:
+        for stress_name, stress in stresses.items():
+            settings = (
+                "prec" if stress_name == "neerslag" else
+                "evap" if stress_name == "verdamping" else
+                None
+            )
+            sm = ps.StressModel(
+                stress, rfunc=rfunc_cls(), name=stress_name, settings=settings,
+            )
+            ml.add_stressmodel(sm)
 
     if not config.noise_model:
         ml.del_noisemodel()

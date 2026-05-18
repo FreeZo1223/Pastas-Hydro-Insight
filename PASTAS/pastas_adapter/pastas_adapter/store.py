@@ -85,8 +85,10 @@ class PastaStoreAdapter:
         store.add_stress(series, name, kind=kind, metadata=metadata or {})
 
     def add_model(self, name: str, ml: Any) -> None:  # noqa: ANN401
+        """Voeg een gefitte PASTAS-model toe; ``name`` overschrijft ``ml.name``."""
         store = self.open()
-        store.add_model(ml, name=name)
+        ml.name = name
+        store.conn.add_model(ml, overwrite=True)
 
     def list_models(self) -> list[str]:
         store = self.open()
