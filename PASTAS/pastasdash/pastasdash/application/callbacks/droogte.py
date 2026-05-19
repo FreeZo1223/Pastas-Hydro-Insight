@@ -106,6 +106,15 @@ def register_droogte_callbacks(app):
         return fig, status
 
 
+import pandas as _pd
+
+
+def _doy_to_date(doy_list: list[int]) -> list[str]:
+    """Zet dag-van-het-jaar om naar datum-strings (jaar 2000 = schrikkeljaar)."""
+    origin = _pd.Timestamp("2000-01-01")
+    return [(origin + _pd.Timedelta(days=int(d) - 1)).strftime("%m-%d") for d in doy_list]
+
+
 def _build_figure(
     bands,
     cur_series,
@@ -115,11 +124,12 @@ def _build_figure(
     ref_end: int,
 ) -> dict:
     doy = bands.index.tolist()
+    dates = _doy_to_date(doy)
     traces: list[go.BaseTraceType] = []
 
     # ── Percentielband p5-p95 (gearceerd) ───────────────────────────────────
     traces.append(go.Scatter(
-        x=doy + doy[::-1],
+        x=dates + dates[::-1],
         y=bands["p95"].tolist() + bands["p5"].tolist()[::-1],
         fill="toself",
         fillcolor=_COLOR_BAND_OUTER,
@@ -131,7 +141,7 @@ def _build_figure(
 
     # ── Percentielband p25-p75 (gearceerd) ──────────────────────────────────
     traces.append(go.Scatter(
-        x=doy + doy[::-1],
+        x=dates + dates[::-1],
         y=bands["p75"].tolist() + bands["p25"].tolist()[::-1],
         fill="toself",
         fillcolor=_COLOR_BAND_INNER,
@@ -143,7 +153,7 @@ def _build_figure(
 
     # ── Mediaan ─────────────────────────────────────────────────────────────
     traces.append(go.Scatter(
-        x=doy,
+        x=dates,
         y=bands["p50"].tolist(),
         mode="lines",
         line={"color": _COLOR_MEDIAN, "width": 1.5, "dash": "dot"},
@@ -155,7 +165,7 @@ def _build_figure(
         for i, yr in enumerate(cmp_df.columns):
             s = cmp_df[yr].dropna()
             traces.append(go.Scatter(
-                x=s.index.tolist(),
+                x=_doy_to_date(s.index.tolist()),
                 y=s.values.tolist(),
                 mode="lines",
                 line={"color": _CMP_COLORS[i % len(_CMP_COLORS)], "width": 1.5},
@@ -165,7 +175,7 @@ def _build_figure(
     # ── Huidig jaar (dik, rood) ──────────────────────────────────────────────
     s = cur_series.dropna()
     traces.append(go.Scatter(
-        x=s.index.tolist(),
+        x=_doy_to_date(s.index.tolist()),
         y=s.values.tolist(),
         mode="lines",
         line={"color": _COLOR_CURRENT, "width": 3},
@@ -175,8 +185,11 @@ def _build_figure(
     layout = {
         "title": f"Cumulatief neerslagtekort — {station_label}",
         "xaxis": {
-            "title": "Dag van het jaar",
-            "range": [1, 366],
+            "title": "",
+            "type": "category",
+            "tickvals": _doy_to_date([1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335]),
+            "ticktext": ["jan", "feb", "mrt", "apr", "mei", "jun",
+                         "jul", "aug", "sep", "okt", "nov", "dec"],
             "showgrid": True,
             "gridcolor": "#f0f0f0",
         },
