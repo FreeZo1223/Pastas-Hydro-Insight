@@ -5,6 +5,7 @@ from pastasdash.application.components.maps import tab_layout as tab_maps
 from pastasdash.application.components.models import tab_layout as tab_model
 from pastasdash.application.components.overview import tab_layout as tab_overview
 from pastasdash.application.components.shared import ids
+from pastasdash.application.droogte import tab as tab_droogte
 
 
 def render():
@@ -23,5 +24,6 @@ def render():
             tab_model.render(),
             tab_compare.render(),
             tab_maps.render(),
+            tab_droogte.render(),
         ],
     )

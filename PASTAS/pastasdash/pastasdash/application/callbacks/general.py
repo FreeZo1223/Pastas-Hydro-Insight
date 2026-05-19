@@ -1,4 +1,6 @@
 import base64
+import logging
+import zipfile
 
 import dash_bootstrap_components as dbc
 import pastastore as pst
@@ -6,8 +8,43 @@ from dash import Input, Output, State, ctx, html, no_update
 from dash.exceptions import PreventUpdate
 
 from pastasdash.application.components.shared import ids, tabcontainer
+from pastasdash.application.droogte import tab as tab_droogte
 from pastasdash.application.settings import settings
 from pastasdash.application.utils import temporary_file
+
+_log = logging.getLogger(__name__)
+
+
+def _looks_like_bro_loket_zip(zip_path: str) -> bool:
+    """Detecteer of een ZIP een BRO Loket-export is (i.p.v. PastaStore-ZIP)."""
+    try:
+        with zipfile.ZipFile(zip_path) as zf:
+            return any(
+                "BRO_Grondwatermonitoringput" in n and n.endswith(".xml")
+                for n in zf.namelist()
+            )
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def _load_pastastore_smart(zip_path: str) -> "pst.PastaStore":
+    """Probeer eerst PastaStore-ZIP, val terug op BRO Loket-converter.
+
+    Hiermee accepteert pastasdash zowel native PastaStore-ZIPs als ruwe
+    BRO Loket-exports. Bij Loket-format wordt automatisch een KNMI-fetch
+    gedaan voor het dichtstbijzijnde klimaatstation.
+    """
+    if _looks_like_bro_loket_zip(zip_path):
+        _log.info("BRO Loket-ZIP gedetecteerd; auto-conversie naar PastaStore...")
+        try:
+            from lesa_agent.bro_loket_cli import bro_loket_zip_to_pastastore
+        except ImportError as exc:
+            raise RuntimeError(
+                "Detected BRO Loket ZIP but lesa_agent is not installed; "
+                "use 'lesa-bro-to-pastastore' CLI eerst."
+            ) from exc
+        return bro_loket_zip_to_pastastore(zip_path, verbose=False)
+    return pst.PastaStore.from_zip(zip_path)
 
 
 def register_general_callbacks(app, pstore):
@@ -75,7 +112,7 @@ def register_general_callbacks(app, pstore):
             decoded = base64.b64decode(content_string)
             if "zip" in content_type:
                 with temporary_file(decoded) as f:
-                    pastastore = pst.PastaStore.from_zip(f)
+                    pastastore = _load_pastastore_smart(f)
                 if settings["PARALLEL"]:
                     raise ValueError(
                         "Parallel processing is not supported for DictConnector files. "
@@ -140,6 +177,12 @@ def register_general_callbacks(app, pstore):
         elif tab == ids.TAB_COMPARE:
             return (
                 tabcontainer.tab_compare.render_content(pstore, selected_data),
+                empty_alert,
+                reset_config_file_store,
+            )
+        elif tab == ids.TAB_DROOGTE:
+            return (
+                tab_droogte.render_content(),
                 empty_alert,
                 reset_config_file_store,
             )

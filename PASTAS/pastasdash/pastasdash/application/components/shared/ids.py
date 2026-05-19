@@ -76,6 +76,18 @@ MAPDATA_CMAP_MIN = "mapdata-cmap-min"
 MAPDATA_CMAP_MAX = "mapdata-cmap-max"
 
 
+# DROOGTE TAB
+TAB_DROOGTE = "tab-droogte"
+DROOGTE_CHART = "droogte-chart"
+DROOGTE_LOADING = "droogte-loading"
+DROOGTE_STATUS = "droogte-status"
+DROOGTE_STATION_DROPDOWN = "droogte-station-dropdown"
+DROOGTE_REF_START = "droogte-ref-start"
+DROOGTE_REF_END = "droogte-ref-end"
+DROOGTE_CMP_YEARS = "droogte-cmp-years"
+DROOGTE_CLIP_TOGGLE = "droogte-clip-toggle"
+DROOGTE_REFRESH_BUTTON = "droogte-refresh-button"
+
 # DUPLICATE CALLBACK STORES
 OVERVIEW_TABLE_SELECTION_1 = "overview-table-selection-1"
 OVERVIEW_TABLE_SELECTION_2 = "overview-table-selection-2"
