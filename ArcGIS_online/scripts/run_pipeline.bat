@@ -50,6 +50,21 @@ goto wacht_op_J
 set PYTHONIOENCODING=utf-8
 
 :: ─────────────────────────────────────────────────────────────
+:: STAP 0.5: Preflight validator (waarschuwend, niet blokkerend)
+:: Checkt of alle AGOL-laag-URLs nog kloppen voordat we een uur
+:: ophalen aan een verkeerde index gaan besteden.
+:: ─────────────────────────────────────────────────────────────
+echo [%TIME%] Stap 0.5: AGOL registry preflight                    >> "%BAT_LOG%"
+python "%SCRIPT_DIR%validate_agol_registry.py" --quick >> "%BAT_LOG%" 2>&1
+set PREFLIGHT_CODE=%ERRORLEVEL%
+
+if %PREFLIGHT_CODE% EQU 0 (
+    echo [%TIME%] Stap 0.5: Registry OK                            >> "%BAT_LOG%"
+) else (
+    echo [%TIME%] Stap 0.5: WAARSCHUWING - registry-mismatch ^(exit %PREFLIGHT_CODE%^), pipeline gaat door >> "%BAT_LOG%"
+)
+
+:: ─────────────────────────────────────────────────────────────
 :: STAP 1: AGOL -> DuckDB
 :: ─────────────────────────────────────────────────────────────
 echo [%TIME%] Stap 1: AGOL naar DuckDB gestart                     >> "%BAT_LOG%"

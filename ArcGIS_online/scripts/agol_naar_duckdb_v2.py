@@ -762,6 +762,63 @@ def maak_df_duckdb_veilig(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+# Drempelwaarden voor chunked write — beschermt tegen STATUS_HEAP_CORRUPTION
+# (gezien op Vogels-tabel, 84k rijen) bij grote DataFrame → Parquet → DuckDB.
+CHUNKED_WRITE_THRESHOLD = 50_000
+CHUNK_RIJEN             = 20_000
+
+
+def _schrijf_df_naar_tabel(con, df: pd.DataFrame, tabel: str, db_pad: str) -> None:
+    """Schrijf DataFrame naar DuckDB-tabel via tijdelijke parquet(s).
+
+    Voor >50k rijen: split in chunks van 20k. Elke chunk wordt apart
+    weggeschreven en geheugen vrijgegeven; DuckDB leest de stapel in één
+    CREATE TABLE-statement via read_parquet([...]). Dit voorkomt de C-level
+    heap-corruption die optreedt bij grote DataFrames in één klap.
+
+    Voor <=50k rijen: één parquet, gedrag identiek aan voorheen.
+    """
+    import gc
+
+    con.execute(f"DROP TABLE IF EXISTS {tabel}")
+    db_dir = Path(db_pad).parent
+
+    if len(df) <= CHUNKED_WRITE_THRESHOLD:
+        tmp = db_dir / f"_temp_{tabel}.parquet"
+        try:
+            df.to_parquet(tmp, index=False)
+            con.execute(
+                f"CREATE TABLE {tabel} AS SELECT * FROM read_parquet('{tmp.as_posix()}')"
+            )
+        finally:
+            tmp.unlink(missing_ok=True)
+        return
+
+    # Chunked pad — schrijf elke chunk apart, ruim geheugen tussendoor op
+    chunk_paden: list[Path] = []
+    try:
+        n_chunks = (len(df) + CHUNK_RIJEN - 1) // CHUNK_RIJEN
+        print(f"\n   ✂️  Chunked write: {len(df)} rijen in {n_chunks} chunks van {CHUNK_RIJEN}",
+              flush=True)
+
+        for i in range(n_chunks):
+            chunk = df.iloc[i * CHUNK_RIJEN:(i + 1) * CHUNK_RIJEN]
+            chunk_pad = db_dir / f"_temp_{tabel}_chunk{i:03d}.parquet"
+            chunk.to_parquet(chunk_pad, index=False)
+            chunk_paden.append(chunk_pad)
+            del chunk
+            gc.collect()
+            print(f"\r   📦 chunk {i + 1}/{n_chunks} geschreven", end="", flush=True)
+
+        # Lijst van forward-slash paden voor DuckDB's SQL-parser
+        bestanden_lit = "[" + ", ".join(f"'{p.as_posix()}'" for p in chunk_paden) + "]"
+        con.execute(f"CREATE TABLE {tabel} AS SELECT * FROM read_parquet({bestanden_lit})")
+        print(f"\n   ✅ {n_chunks} chunks samengevoegd in {tabel}", flush=True)
+    finally:
+        for p in chunk_paden:
+            p.unlink(missing_ok=True)
+
+
 def schrijf_naar_duckdb(alle_data: dict, db_pad: str):
     print(f"\n{'='*60}", flush=True)
     print(f"  🦆 SCHRIJVEN NAAR DUCKDB: {db_pad}", flush=True)
@@ -806,19 +863,9 @@ def schrijf_naar_duckdb(alle_data: dict, db_pad: str):
                 if mixed:
                     print(f"\n   ⚠️  Nog mixed-type kolommen na fix: {mixed}")
 
-                con.execute(f"DROP TABLE IF EXISTS {tabel}")
-
-                # Schrijf via tijdelijk parquet — voorkomt C-level DuckDB crash bij grote
-                # DataFrames (84k+ rijen) die via con.register() worden geladen
-                _temp_parquet = Path(db_pad).with_name(f"_temp_{tabel}.parquet")
-                try:
-                    df_veilig.to_parquet(_temp_parquet, index=False)
-                    con.execute(
-                        f"CREATE TABLE {tabel} AS SELECT * FROM read_parquet('{_temp_parquet}')"
-                    )
-                finally:
-                    if _temp_parquet.exists():
-                        _temp_parquet.unlink()
+                # Schrijf via helper — chunked pad voor >50k rijen, voorkomt
+                # heap-corruption die historisch op Vogels (84k) is opgetreden.
+                _schrijf_df_naar_tabel(con, df_veilig, tabel, db_pad)
 
                 # Controleer of data echt geschreven is
                 telling = con.execute(f"SELECT COUNT(*) FROM {tabel}").fetchone()[0]
