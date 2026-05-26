@@ -1,0 +1,59 @@
+name: CI — ArcGIS_online pipeline
+
+# Alleen runnen als pipeline-code wijzigt; niet bij elke commit elders in de repo.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "ArcGIS_online/scripts/**"
+      - "ArcGIS_online/tests/**"
+      - ".github/workflows/ci-arcgis-online.yml"
+  pull_request:
+    paths:
+      - "ArcGIS_online/scripts/**"
+      - "ArcGIS_online/tests/**"
+      - ".github/workflows/ci-arcgis-online.yml"
+
+jobs:
+  lint-en-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install runtime + dev deps
+        # Minimale set: alleen wat de pure-logica tests nodig hebben.
+        # Geopandas/psycopg2 zijn zwaar (system deps) en niet nodig voor
+        # de huidige unit-tests — wel toevoegen als integration-tests komen.
+        run: |
+          python -m pip install --upgrade pip
+          pip install \
+            duckdb \
+            pandas \
+            python-dotenv \
+            requests \
+            pytest \
+            ruff
+
+      - name: Ruff lint (pipeline-scripts)
+        # Niet-blokkerend op nieuwe regels; alleen ernstige fouten falen de build.
+        # Uitgebreidere rules invoeren in eigen sessie.
+        run: |
+          ruff check \
+            --select=E9,F63,F7,F82 \
+            --output-format=github \
+            ArcGIS_online/scripts/ ArcGIS_online/tests/
+
+      - name: Pytest (unit tests)
+        env:
+          PYTHONIOENCODING: utf-8
+        run: |
+          pytest ArcGIS_online/tests/ -v -m unit

@@ -1,0 +1,24 @@
+geopandas
+pyogrio
+shapely>=2
+rtree
+numpy
+pandas
+scikit-learn
+hdbscan
+leafmap
+earthengine-api
+rasterio
+pyyaml
+
+
+python -m sv_embed.cli `
+  --gpkg C:\GIS_Projecten\StichtseVechtTestAnalyses\data\raw\Geopackages_StichtseVecht\GeoPackageData.gpkg `
+  --bats-layer Vleermuizen_2025_SMP_SV `
+  --study-layer Onderzoeksgebied `
+  --year 2024 `
+  --n-bg auto `
+  --min-dist 100 `
+  --seed 42 `
+  --out results `
+  --ee-project single-frame-472213-m4

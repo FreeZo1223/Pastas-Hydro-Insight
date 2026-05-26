@@ -52,9 +52,21 @@ outputs/
 *.qgz~
 *.qgs~
 
+# ── ArcGIS_online: code wel in git, data/logs/runtime niet ──
+# (project zelf NIET gitignored — alleen onderstaande subpaden)
+ArcGIS_online/Databeheer/
+ArcGIS_online/ESRI_Backups/
+ArcGIS_online/archive/
+ArcGIS_online/.env
+ArcGIS_online/scripts/pipeline_checkpoint.json
+ArcGIS_online/scripts/pipeline_run_*.log
+ArcGIS_online/scripts/export_rapport.csv
+ArcGIS_online/scripts/*.duckdb
+ArcGIS_online/scripts/*.parquet
+ArcGIS_online/export_rapport.csv
+
 # ── Niet-LESA project-mappen (private werk, niet delen) ─────
 /Alkmaar_Vegetatie/
-/ArcGIS_online/
 /Archief/
 /Bomenrijen/
 /Connectiviteit/

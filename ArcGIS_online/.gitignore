@@ -1,0 +1,4 @@
+.env
+__pycache__/
+*.pyc
+outputs/inventory/inventory_master.json
