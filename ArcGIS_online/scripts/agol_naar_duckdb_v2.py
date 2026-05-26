@@ -1003,6 +1003,14 @@ def preflight_check() -> bool:
 def main(hervat: bool = False):
     import sys
 
+    # Optionele Sentry-integratie — no-op zonder SENTRY_DSN, geen verstoring.
+    # Geeft visibility op uncaught exceptions in productie-runs.
+    try:
+        from _observability import init_observability
+        init_observability("agol_ingest")
+    except ImportError:
+        pass
+
     # Zorg dat de log-map bestaat
     DATABEHEER.mkdir(parents=True, exist_ok=True)
     (DATABEHEER / "03_logs").mkdir(parents=True, exist_ok=True)
