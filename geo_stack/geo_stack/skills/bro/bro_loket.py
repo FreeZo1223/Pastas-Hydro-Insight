@@ -178,6 +178,46 @@ def parse_gld_csv(csv_text: str) -> tuple["pd.Series", int | None]:
 
 # ── ZIP parsing ──────────────────────────────────────────────────────────────
 
+def parse_bro_loket_dir(folder_path: Path | str) -> list[GmwRecord]:
+    """Parse een ongezipte BRO Loket-export (mapstructuur) naar GmwRecords.
+
+    Parameters
+    ----------
+    folder_path
+        Pad naar de uitgepakte BRO Loket-map (bevat ``BRO_Grondwatermonitoring/``).
+
+    Returns
+    -------
+    list[GmwRecord]
+        Eén record per GMW, identiek aan :func:`parse_bro_loket_zip`.
+    """
+    folder = Path(folder_path)
+    records: dict[str, GmwRecord] = {}
+
+    for xml_file in folder.rglob("GMW*.xml"):
+        xml_text = xml_file.read_text(encoding="utf-8", errors="replace")
+        try:
+            rec = _parse_gmw_xml(xml_text)
+        except ET.ParseError as exc:
+            log.warning("XML-parse faalde voor %s: %s", xml_file, exc)
+            continue
+        if rec.gmw_id:
+            records[rec.gmw_id] = rec
+
+    for csv_file in folder.rglob("*-full.csv"):
+        gmw_id = next(
+            (p.name for p in csv_file.parents if p.name.startswith("GMW")), None
+        )
+        if gmw_id is None:
+            continue
+        gld_id = csv_file.stem.replace("-full", "")
+        csv_text = csv_file.read_text(encoding="utf-8", errors="replace")
+        rec = records.setdefault(gmw_id, GmwRecord(gmw_id=gmw_id))
+        rec.gld_csvs.append((gld_id, csv_text))
+
+    return list(records.values())
+
+
 def parse_bro_loket_zip(zip_path: Path | str) -> list[GmwRecord]:
     """Parse een BRO Loket ZIP-export naar GmwRecords met gld_csvs ingelezen.
 

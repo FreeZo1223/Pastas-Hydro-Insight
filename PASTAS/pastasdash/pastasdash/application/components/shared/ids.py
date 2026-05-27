@@ -6,6 +6,8 @@ HELP_BUTTON_CLOSE = "help-button-close"
 HELP_MODAL = "help-modal"
 HELP_TITLE = "help-title"
 LOAD_PASTASTORE_BUTTON = "load-pastastore-button"
+BRO_FOLDER_INPUT = "bro-folder-input"
+BRO_FOLDER_BUTTON = "bro-folder-button"
 
 # ALERT
 ALERT = "alert"

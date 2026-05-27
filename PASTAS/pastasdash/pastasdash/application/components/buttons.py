@@ -121,3 +121,63 @@ def render_load_pastastore_button():
             "verticalAlign": "middle",
         },
     )
+
+
+def render_bro_folder_input():
+    """Renders a text input + button to load a BRO Loket folder directly by path.
+
+    Only useful when pastasdash runs locally (path must exist on the server).
+
+    Returns
+    -------
+    dash.html.Div
+        A Dash HTML Div containing a path text input and load button.
+    """
+    return html.Div(
+        id="div-bro-folder-input",
+        children=[
+            dcc.Input(
+                id=ids.BRO_FOLDER_INPUT,
+                type="text",
+                placeholder="Pad naar uitgepakte BRO-map…",
+                debounce=False,
+                style={
+                    "width": "280px",
+                    "height": "37.5px",
+                    "lineHeight": "35px",
+                    "borderWidth": "1px",
+                    "borderStyle": "solid",
+                    "borderRadius": "5px 0 0 5px",
+                    "padding": "0 8px",
+                    "verticalAlign": "middle",
+                },
+            ),
+            dbc.Button(
+                [html.I(className="fa-solid fa-folder-open"), " Laden"],
+                id=ids.BRO_FOLDER_BUTTON,
+                n_clicks=0,
+                style={
+                    "height": "37.5px",
+                    "borderRadius": "0 5px 5px 0",
+                    "backgroundColor": "#006f92",
+                    "border": "1px solid #006f92",
+                    "verticalAlign": "middle",
+                },
+            ),
+            dbc.Tooltip(
+                "Laad een BRO Loket-exportmap rechtstreeks via mappad "
+                "(werkt alleen als pastasdash lokaal draait)",
+                target=ids.BRO_FOLDER_BUTTON,
+                style={"margin-bottom": 0},
+                placement="left",
+            ),
+        ],
+        style={
+            "display": "inline-flex",
+            "alignItems": "center",
+            "margin-top": 10,
+            "margin-bottom": 10,
+            "margin-right": 5,
+            "verticalAlign": "middle",
+        },
+    )

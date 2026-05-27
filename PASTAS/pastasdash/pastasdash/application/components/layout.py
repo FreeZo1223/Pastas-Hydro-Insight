@@ -44,6 +44,7 @@ def create_layout(app: Dash, pstore: PastaStoreInterface) -> html.Div:
                     html.H1(app.title, id="app_title"),
                     html.Div(id=ids.ALERT_DIV),
                     buttons.render_load_pastastore_button(),
+                    buttons.render_bro_folder_input(),
                     buttons.render_help_button_modal(),
                 ],
             ),

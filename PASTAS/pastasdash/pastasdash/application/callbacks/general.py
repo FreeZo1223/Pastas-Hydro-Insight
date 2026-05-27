@@ -1,6 +1,7 @@
 import base64
 import logging
 import zipfile
+from pathlib import Path
 
 import dash_bootstrap_components as dbc
 import pastastore as pst
@@ -27,24 +28,51 @@ def _looks_like_bro_loket_zip(zip_path: str) -> bool:
         return False
 
 
-def _load_pastastore_smart(zip_path: str) -> "pst.PastaStore":
-    """Probeer eerst PastaStore-ZIP, val terug op BRO Loket-converter.
+def _looks_like_bro_loket_dir(folder_path: str) -> bool:
+    """Detecteer of een map een uitgepakte BRO Loket-export is."""
+    try:
+        return any(Path(folder_path).rglob("GMW*.xml"))
+    except Exception:  # noqa: BLE001
+        return False
 
-    Hiermee accepteert pastasdash zowel native PastaStore-ZIPs als ruwe
-    BRO Loket-exports. Bij Loket-format wordt automatisch een KNMI-fetch
-    gedaan voor het dichtstbijzijnde klimaatstation.
+
+def _load_pastastore_smart(path: str) -> "pst.PastaStore":
+    """Laad een PastaStore uit een ZIP, BRO Loket-ZIP of BRO Loket-map.
+
+    Accepteert:
+    - Native PastaStore-ZIP (``.pastastore`` of ``.zip``)
+    - BRO Loket export-ZIP (bevat GMW XML's)
+    - Uitgepakte BRO Loket-map (mappad opgegeven via tekstinvoer)
+
+    Bij BRO Loket-formaat wordt automatisch een KNMI-fetch gedaan voor
+    het dichtstbijzijnde klimaatstation.
     """
-    if _looks_like_bro_loket_zip(zip_path):
+    try:
+        from lesa_agent.bro_loket_cli import bro_loket_zip_to_pastastore
+        _have_lesa = True
+    except ImportError:
+        _have_lesa = False
+
+    p = Path(path)
+    if p.is_dir():
+        _log.info("BRO Loket-map gedetecteerd; auto-conversie naar PastaStore...")
+        if not _have_lesa:
+            raise RuntimeError(
+                "Detected BRO Loket map but lesa_agent is not installed; "
+                "use 'lesa-bro-to-pastastore' CLI eerst."
+            )
+        return bro_loket_zip_to_pastastore(path, verbose=False)
+
+    if _looks_like_bro_loket_zip(path):
         _log.info("BRO Loket-ZIP gedetecteerd; auto-conversie naar PastaStore...")
-        try:
-            from lesa_agent.bro_loket_cli import bro_loket_zip_to_pastastore
-        except ImportError as exc:
+        if not _have_lesa:
             raise RuntimeError(
                 "Detected BRO Loket ZIP but lesa_agent is not installed; "
                 "use 'lesa-bro-to-pastastore' CLI eerst."
-            ) from exc
-        return bro_loket_zip_to_pastastore(zip_path, verbose=False)
-    return pst.PastaStore.from_zip(zip_path)
+            )
+        return bro_loket_zip_to_pastastore(path, verbose=False)
+
+    return pst.PastaStore.from_zip(path)
 
 
 def register_general_callbacks(app, pstore):
@@ -81,11 +109,12 @@ def register_general_callbacks(app, pstore):
         Output(ids.LOAD_PASTASTORE_BUTTON, "contents"),
         Input(ids.TAB_CONTAINER, "value"),
         Input(ids.LOAD_PASTASTORE_BUTTON, "contents"),
+        Input(ids.BRO_FOLDER_BUTTON, "n_clicks"),
         State(ids.SELECTED_OSERIES_STORE, "data"),
-        # State(ids.TRAVAL_RESULT_FIGURE_STORE, "data"),
+        State(ids.BRO_FOLDER_INPUT, "value"),
         # prevent_initial_call=True,
     )
-    def render_tab_content(tab, pastastore_config, selected_data=None):
+    def render_tab_content(tab, pastastore_config, folder_n_clicks, selected_data=None, folder_path=None):
         """Render tab content.
 
         Parameters
@@ -105,9 +134,38 @@ def register_general_callbacks(app, pstore):
             "success",  # alert color
             "",  # empty alert message
         )
-        # Load pastastore from .pastastore config file
+        # Load pastastore from .pastastore config file or BRO folder path
         reset_config_file_store = None
-        if pastastore_config is not None:
+        if ctx.triggered_id == ids.BRO_FOLDER_BUTTON and folder_n_clicks:
+            if not folder_path or not folder_path.strip():
+                return (
+                    no_update,
+                    (True, "danger", "Voer een mappad in."),
+                    reset_config_file_store,
+                )
+            p = Path(folder_path.strip())
+            if not p.is_dir():
+                return (
+                    no_update,
+                    (True, "danger", f"Map niet gevonden: {folder_path}"),
+                    reset_config_file_store,
+                )
+            if not _looks_like_bro_loket_dir(str(p)):
+                return (
+                    no_update,
+                    (True, "danger", f"Geen BRO Loket-mapstructuur gevonden in: {folder_path}"),
+                    reset_config_file_store,
+                )
+            try:
+                pastastore = _load_pastastore_smart(str(p))
+                pstore.set_pastastore(pastastore)
+            except Exception as e:  # noqa: BLE001
+                return (
+                    no_update,
+                    (True, "danger", str(e)),
+                    reset_config_file_store,
+                )
+        elif pastastore_config is not None:
             content_type, content_string = pastastore_config.split(",")
             decoded = base64.b64decode(content_string)
             if "zip" in content_type:

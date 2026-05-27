@@ -85,7 +85,11 @@ def bro_loket_zip_to_pastastore(
 
     zip_path = Path(zip_path)
     _say(f"[1/5] Parse BRO Loket export: {zip_path.name}")
-    records = parse_bro_loket_zip(zip_path)
+    if zip_path.is_dir():
+        from geo_stack.skills.bro.bro_loket import parse_bro_loket_dir
+        records = parse_bro_loket_dir(zip_path)
+    else:
+        records = parse_bro_loket_zip(zip_path)
     records_with_xy = [r for r in records if r.x is not None and r.y is not None]
     _say(f"  -> {len(records)} GMW's, {len(records_with_xy)} met geldige RD-locatie")
 
