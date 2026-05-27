@@ -120,11 +120,15 @@ def build_band_metadata_mapping(vrt_path: str, metadata: pd.DataFrame) -> pd.Dat
 
     De VRT-banden zijn alfabetisch geordend op soortnaam (COG-bestandsnaam),
     terwijl de metadata is geordend op soortengroep. Koppeling vindt plaats
-    via de Nederlandse soortnaam, afgeleid uit de COG-bestandsnaam.
+    via meerdere strategieën (case-insensitief):
+        1. directe stem-match op dutch_name
+        2. tekst vóór haakjes op dutch_name (bv. "Brachycentrus subnubilus")
+        3. tekst binnen haakjes op dutch_name (bv. "Witkuifje" uit "...(Witkuifje)")
+        4. stem op scientific_name
 
-    COG-bestandsnamen volgen het patroon:
-        {naam}_cog.tif                       → Akkerboterbloem_cog.tif
-        {naam}({alternatieve naam})_cog.tif  → Athripsodes albifrons(Witkuifje)_cog.tif
+    Bands zonder metadata-match worden **overgeslagen** (niet stilzwijgend
+    voorzien van een default cutoff). Dit voorkomt dat soorten zonder
+    metadata onterecht als 'aanwezig' worden gerapporteerd.
 
     Parameters
     ----------
@@ -136,64 +140,71 @@ def build_band_metadata_mapping(vrt_path: str, metadata: pd.DataFrame) -> pd.Dat
     Returns
     -------
     pd.DataFrame
-        DataFrame met één rij per VRT-band (band 1 = index 0), met alle
+        DataFrame met één rij per **gematchte** VRT-band, met alle
         metadata-kolommen plus 'vrt_band' (1-gebaseerde bandindex).
+        Het aantal rijen kan kleiner zijn dan het aantal VRT-banden.
     """
     tree = ET.parse(vrt_path)
     root = tree.getroot()
 
-    meta_lookup: dict[str, pd.Series] = {
-        str(row["dutch_name"]).strip(): row
+    meta_by_dutch: dict[str, pd.Series] = {
+        str(row["dutch_name"]).strip().lower(): row
         for _, row in metadata.iterrows()
+        if pd.notna(row.get("dutch_name"))
+    }
+    meta_by_sci: dict[str, pd.Series] = {
+        str(row["scientific_name"]).strip().lower(): row
+        for _, row in metadata.iterrows()
+        if pd.notna(row.get("scientific_name")) and str(row["scientific_name"]).strip()
     }
 
-    rows = []
+    rows: list[pd.Series] = []
+    skipped: list[tuple[int, str]] = []
     band_num = 0
     for band_el in root.findall("VRTRasterBand"):
         band_num += 1
         source_el = band_el.find(".//SourceFilename")
-        raw_name: str | None = None
+        if source_el is None or not source_el.text:
+            skipped.append((band_num, "(geen bestandsnaam)"))
+            continue
 
-        if source_el is not None and source_el.text:
-            filename = Path(source_el.text).name          # Athripsodes albifrons(Witkuifje)_cog.tif
-            stem = filename.replace("_cog.tif", "")       # Athripsodes albifrons(Witkuifje)
-            raw_name = re.sub(r"\s*\([^)]*\)\s*$", "", stem).strip()  # Athripsodes albifrons
+        filename = Path(source_el.text).name        # Athripsodes albifrons(Witkuifje)_cog.tif
+        stem = filename.replace("_cog.tif", "")     # Athripsodes albifrons(Witkuifje)
+        stem_lc = stem.strip().lower()
+        before_paren = re.sub(r"\s*\([^)]*\)\s*$", "", stem).strip().lower()
+        inside_match = re.search(r"\(([^)]+)\)", stem)
+        inside = inside_match.group(1).strip().lower() if inside_match else None
 
-        if raw_name and raw_name in meta_lookup:
-            row = meta_lookup[raw_name].copy()
-            row["vrt_band"] = band_num
-            rows.append(row)
-        else:
-            logger.warning(
-                f"Band {band_num} ({raw_name!r}) niet gevonden in metadata — "
-                "standaardwaarden toegepast"
-            )
-            from config import settings  # lokale import om circulaire dep. te vermijden
-            rows.append(
-                pd.Series(
-                    {
-                        "band_number": band_num,
-                        "filename": f"band_{band_num}.tif",
-                        "dutch_name": raw_name or f"Band_{band_num}",
-                        "scientific_name": "",
-                        "species_group": "Onbekend",
-                        "broad_group": "Onbekend",
-                        "rl_category": "NE",
-                        "habitat_directive": "",
-                        "cutoff_value": settings.DEFAULT_CUTOFF,
-                        "national_coverage_pct": None,
-                        "weight": 1,
-                        "notes": "Niet in metadata",
-                        "vrt_band": band_num,
-                    }
-                )
-            )
+        match: pd.Series | None = None
+        if stem_lc in meta_by_dutch:
+            match = meta_by_dutch[stem_lc]
+        elif before_paren and before_paren in meta_by_dutch:
+            match = meta_by_dutch[before_paren]
+        elif inside and inside in meta_by_dutch:
+            match = meta_by_dutch[inside]
+        elif before_paren and before_paren in meta_by_sci:
+            match = meta_by_sci[before_paren]
+
+        if match is None:
+            skipped.append((band_num, stem))
+            continue
+
+        row = match.copy()
+        row["vrt_band"] = band_num
+        rows.append(row)
 
     result = pd.DataFrame(rows).reset_index(drop=True)
-    logger.info(
-        f"Band-metadata koppeling: {band_num} VRT-banden, "
-        f"{(result['dutch_name'] != result.get('dutch_name', '')).sum() if False else band_num} verwerkt"
-    )
+    if skipped:
+        logger.warning(
+            f"{len(skipped)} van {band_num} VRT-banden hebben geen metadata-match "
+            "en worden uitgesloten van de analyse"
+        )
+        voorbeelden = ", ".join(name for _, name in skipped[:8])
+        logger.warning(f"  Voorbeelden: {voorbeelden}{'…' if len(skipped) > 8 else ''}")
+        logger.warning(
+            "  Voeg deze soorten toe aan config/species_metadata.csv om ze mee te nemen."
+        )
+    logger.info(f"Band-metadata koppeling: {len(result)}/{band_num} banden gekoppeld")
     return result
 
 
@@ -301,31 +312,41 @@ def _mask_chunked(
     Lees de gemaskeerde data in verticale chunks van chunk_size rijen.
 
     Wordt intern aangeroepen door mask_vrt_to_area voor grote gebieden.
+    Bepaalt eerst het source-window dat het studiegebied dekt en leest
+    daarna chunks via dat window — niet via output-coördinaten.
     """
-    from rasterio.mask import mask as rasterio_mask_fn
+    from shapely.geometry import shape
+    from rasterio.windows import from_bounds, Window
+    from rasterio.features import geometry_mask as geo_mask
 
-    # Eerste pass: bepaal window en transform via bounding box mask
-    bbox_geom = [mapping(
-        gpd.GeoDataFrame(geometry=geometries, crs=TARGET_CRS).unary_union.envelope
-    )]
-    first_chunk, out_transform = rasterio_mask_fn(
-        src, geometries, crop=True, nodata=0, indexes=indexes[:1], filled=True
+    union_geom = gpd.GeoSeries(
+        [shape(g) for g in geometries], crs=TARGET_CRS
+    ).unary_union
+    minx, miny, maxx, maxy = union_geom.bounds
+
+    src_window = from_bounds(
+        minx, miny, maxx, maxy, transform=src.transform
+    ).round_offsets().round_lengths()
+    src_window = src_window.intersection(
+        Window(0, 0, src.width, src.height)
     )
-    rows_total = first_chunk.shape[1]
-    cols_total = first_chunk.shape[2]
+    rows_total = int(src_window.height)
+    cols_total = int(src_window.width)
+    out_transform = src.window_transform(src_window)
+    col_off = int(src_window.col_off)
+    row_off = int(src_window.row_off)
 
-    # Alloceer output array
     out = np.zeros((len(indexes), rows_total, cols_total), dtype=np.uint8)
 
-    # Lees chunks per band om geheugen te beperken
     for start_row in range(0, rows_total, chunk_size):
         end_row = min(start_row + chunk_size, rows_total)
-        window = rasterio.windows.Window(0, start_row, cols_total, end_row - start_row)
+        chunk_win = Window(
+            col_off, row_off + start_row,
+            cols_total, end_row - start_row,
+        )
         for b_pos, b_idx in enumerate(indexes):
-            out[b_pos, start_row:end_row, :] = src.read(b_idx, window=window)
+            out[b_pos, start_row:end_row, :] = src.read(b_idx, window=chunk_win)
 
-    # Pas masker toe (nodata 0 buiten geometrie)
-    from rasterio.features import geometry_mask as geo_mask
     area_mask = ~geo_mask(
         geometries=geometries,
         transform=out_transform,

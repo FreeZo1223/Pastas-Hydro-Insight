@@ -76,6 +76,16 @@ def _parse_args() -> argparse.Namespace:
         metavar="GROEP",
         help="Filter op soortengroep, bijv. 'Vogels', 'Reptielen', 'Vaatplanten'",
     )
+    parser.add_argument(
+        "--soorten",
+        default=None,
+        metavar="LIJST_OF_PAD",
+        help=(
+            "Komma-gescheiden lijst van Nederlandse soortnamen (bv. 'Das,Eekhoorn,Ree') "
+            "of pad naar een tekstbestand met één soortnaam per regel. "
+            "Matching is case-insensitief. Combineerbaar met --groep."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -183,7 +193,6 @@ def main() -> None:
         sys.exit(1)
 
     # 4. Optioneel: filter op soortengroep
-    band_indices: list[int] | None = None
     if args.groep:
         mask_groep = band_meta["species_group"].str.lower() == args.groep.lower()
         if not mask_groep.any():
@@ -193,9 +202,34 @@ def main() -> None:
                 f"Beschikbare groepen: {', '.join(beschikbaar)}"
             )
             sys.exit(1)
-        band_indices = [int(b) for b in band_meta.loc[mask_groep, "vrt_band"]]
         band_meta = band_meta[mask_groep].reset_index(drop=True)
         logger.info(f"Filter op groep '{args.groep}': {len(band_meta)} banden geselecteerd")
+
+    # 4b. Optioneel: filter op expliciete soortenlijst
+    if args.soorten:
+        soorten_pad = Path(args.soorten)
+        if soorten_pad.exists() and soorten_pad.is_file():
+            namen_raw = soorten_pad.read_text(encoding="utf-8").splitlines()
+        else:
+            namen_raw = args.soorten.split(",")
+        namen = {n.strip().lower() for n in namen_raw if n.strip()}
+        beschikbaar = set(band_meta["dutch_name"].str.lower())
+        ontbreekt = sorted(namen - beschikbaar)
+        if ontbreekt:
+            logger.warning(
+                f"{len(ontbreekt)} soorten niet beschikbaar (geen COG of geen metadata): "
+                f"{', '.join(ontbreekt)}"
+            )
+        mask_srt = band_meta["dutch_name"].str.lower().isin(namen)
+        if not mask_srt.any():
+            logger.error("Geen van de opgegeven soorten gevonden in beschikbare banden.")
+            sys.exit(1)
+        band_meta = band_meta[mask_srt].reset_index(drop=True)
+        logger.info(f"Filter op soortenlijst: {len(band_meta)} banden geselecteerd")
+
+    # Gebruik de vrt_band indices uit de (mogelijk gefilterde) band_meta zodat
+    # bands zonder metadata-match niet meer ingeladen of geanalyseerd worden.
+    band_indices: list[int] = [int(b) for b in band_meta["vrt_band"]]
 
     # 5. VRT masken op studiegebied
     try:

@@ -29,11 +29,11 @@ METADATA_PATH = Path(__file__).parent / "species_metadata.csv"
 # ------------------------------------------------------------
 # SCHAALFACTOR VAN DE RASTERWAARDEN
 # ------------------------------------------------------------
-# De COG-bestanden slaan kanswaardes op als Byte (0–255).
-# Om de kans op voorkomen (0–1) te verkrijgen: waarde / DATA_SCALE_FACTOR
-# Standaard: 255 (volledige Byte-schaal → 0–1 range)
-# Pas aan naar 100 als de waarden als 0–100 percentages zijn opgeslagen.
-DATA_SCALE_FACTOR: float = 255.0
+# De COG-bestanden slaan kanswaardes op als Byte, maar op een 0–100 schaal
+# (geen volledige 0–255 byte-range). Om de kans op voorkomen (0–1) te
+# verkrijgen: waarde / DATA_SCALE_FACTOR.
+# Verificatie: rasterio.open(<cog>).read().max() geeft 100, niet 255.
+DATA_SCALE_FACTOR: float = 100.0
 
 # ------------------------------------------------------------
 # ANALYSE PARAMETERS
@@ -58,7 +58,7 @@ HOGE_PRIORITEIT_DREMPEL: float = 0.75
 MAX_CHUNK_MB: int = 512
 
 # Gebiedsgrootte (in ha) waarboven chunk-gewijze verwerking wordt gebruikt
-CHUNK_THRESHOLD_HA: float = 1000.0
+CHUNK_THRESHOLD_HA: float = 50000.0
 
 # ------------------------------------------------------------
 # GEWICHTEN PER BESCHERMINGSSTATUS (voor versie 2)

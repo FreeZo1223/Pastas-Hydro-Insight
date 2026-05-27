@@ -1,17 +1,12 @@
-"""CLI: BRO Loket ZIP -> PastaStore ZIP (klaar voor pastasdash-upload).
+"""CLI + reusable function: BRO Loket ZIP -> PastaStore.
 
-Usage:
+CLI:
     lesa-bro-to-pastastore INPUT.zip [--output OUT.zip] [--knmi-station 260]
                                      [--fit-models] [--rfunc Gamma]
 
-Workflow:
-1. Parse BRO Loket-export (GMW XML's + GLD CSV's)
-2. Resample uurwaarden naar dagelijkse gemiddelden
-3. Vind dichtstbijzijnde KNMI-klimaatstation (centroid van peilbuizen)
-4. Haal KNMI neerslag + verdamping (via hydropandas)
-5. Bouw PastaStore met screen_top/bottom/ground_level metadata
-6. Optioneel: PASTAS RechargeModel per oseries
-7. Exporteer als ZIP voor pastasdash-upload
+Library:
+    from lesa_agent.bro_loket_cli import bro_loket_zip_to_pastastore
+    store = bro_loket_zip_to_pastastore(zip_path, work_dir=...)
 """
 
 from __future__ import annotations
@@ -19,8 +14,14 @@ from __future__ import annotations
 import argparse
 import io
 import logging
+import shutil
 import sys
+import tempfile
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import pastastore as pst  # noqa: F401
 
 # UTF-8 console op Windows
 if sys.platform.startswith("win") and hasattr(sys.stdout, "buffer"):
@@ -29,58 +30,43 @@ if sys.platform.startswith("win") and hasattr(sys.stdout, "buffer"):
 log = logging.getLogger("lesa.bro_loket_cli")
 
 
-def main() -> None:
-    p = argparse.ArgumentParser(prog="lesa-bro-to-pastastore", description=__doc__)
-    p.add_argument("input", help="Pad naar BRO Loket export ZIP")
-    p.add_argument("--output", help="Output ZIP (default: <input>_pastastore.zip)")
-    p.add_argument(
-        "--knmi-station", default=None,
-        help="KNMI-station-ID (bv. 260). Leeg = automatisch dichtstbijzijnde.",
-    )
-    p.add_argument("--tmin", default="2000-01-01", help="Begin-datum KNMI")
-    p.add_argument("--tmax", default=None, help="Eind-datum KNMI (leeg = vandaag)")
-    p.add_argument(
-        "--fit-models", action="store_true",
-        help="Fit een PASTAS RechargeModel per oseries (kost ~10s/buis)",
-    )
-    p.add_argument("--rfunc", default="Gamma", help="PASTAS responsfunctie")
-    p.add_argument("-v", "--verbose", action="store_true")
-    args = p.parse_args()
-
-    logging.basicConfig(
-        level=logging.INFO if args.verbose else logging.WARNING,
-        format="%(levelname)s | %(message)s",
-    )
-
-    in_path = Path(args.input).resolve()
-    if not in_path.exists():
-        sys.exit(f"FOUT: input ZIP bestaat niet: {in_path}")
-    out_path = Path(args.output) if args.output else in_path.with_name(
-        in_path.stem + "_pastastore.zip"
-    )
-
-    _build_pastastore_from_bro_loket(
-        zip_in=in_path,
-        zip_out=out_path,
-        knmi_station=args.knmi_station,
-        tmin=args.tmin,
-        tmax=args.tmax,
-        fit_models=args.fit_models,
-        rfunc=args.rfunc,
-    )
-
-
-def _build_pastastore_from_bro_loket(
+def bro_loket_zip_to_pastastore(
+    zip_path: Path | str,
     *,
-    zip_in: Path,
-    zip_out: Path,
-    knmi_station: str | None,
-    tmin: str,
-    tmax: str | None,
-    fit_models: bool,
-    rfunc: str,
-) -> None:
-    import pandas as pd
+    work_dir: Path | str | None = None,
+    knmi_station: str | None = None,
+    tmin: str = "2000-01-01",
+    tmax: str | None = None,
+    fit_models: bool = False,
+    rfunc: str = "Gamma",
+    verbose: bool = False,
+) -> "pst.PastaStore":
+    """Bouw een PastaStore uit een BRO Loket export-ZIP.
+
+    Parameters
+    ----------
+    zip_path
+        Pad naar BRO Loket-ZIP (bevat ``BRO_Grondwatermonitoring/``).
+    work_dir
+        Werkmap voor de PasConnector. Leeg = tijdelijke map (geheugen-only
+        beschouwd; wordt automatisch opgeruimd zodra het PastaStore-object
+        garbage-collected wordt).
+    knmi_station
+        Forceer een specifiek KNMI-stationsnummer. Leeg = dichtstbijzijnde
+        klimaatstation op basis van centroid van peilbuizen.
+    tmin, tmax
+        Periode voor KNMI-fetch.
+    fit_models
+        Bouw een PASTAS RechargeModel per oseries met >100 metingen.
+    rfunc
+        Naam van PASTAS-responsfunctie.
+
+    Returns
+    -------
+    pastastore.PastaStore
+        In-memory store (PasConnector op disk). Gebruik
+        ``store.to_zip(path)`` om naar ZIP te exporteren.
+    """
     import pyproj
     import pastastore as pst
 
@@ -93,15 +79,19 @@ def _build_pastastore_from_bro_loket(
     from pastas_adapter.fit import FitConfig, fit_oseries
     from pastas_adapter.store import PastaStoreAdapter, StoreLocation
 
-    print(f"[1/5] Parse BRO Loket export: {zip_in.name}")
-    records = parse_bro_loket_zip(zip_in)
+    def _say(msg: str) -> None:
+        if verbose:
+            print(msg)
+
+    zip_path = Path(zip_path)
+    _say(f"[1/5] Parse BRO Loket export: {zip_path.name}")
+    records = parse_bro_loket_zip(zip_path)
     records_with_xy = [r for r in records if r.x is not None and r.y is not None]
-    print(f"  -> {len(records)} GMW's, {len(records_with_xy)} met geldige RD-locatie")
+    _say(f"  -> {len(records)} GMW's, {len(records_with_xy)} met geldige RD-locatie")
 
     if not records_with_xy:
-        sys.exit("FOUT: geen peilbuizen met locatie gevonden")
+        raise ValueError("Geen peilbuizen met locatie gevonden in BRO Loket-ZIP")
 
-    # Centroid voor KNMI-station-zoekactie
     xs = [r.x for r in records_with_xy]
     ys = [r.y for r in records_with_xy]
     cx, cy = sum(xs) / len(xs), sum(ys) / len(ys)
@@ -115,24 +105,20 @@ def _build_pastastore_from_bro_loket(
         stn_dist = None
     else:
         stn_id, stn_dist, stn_name = nearest_climate_station(lat, lon)
-    print(f"[2/5] KNMI-station: {stn_id} ({stn_name})"
-          + (f", {stn_dist:.1f} km van centroid" if stn_dist else ""))
+    _say(f"[2/5] KNMI-station: {stn_id} ({stn_name})"
+         + (f", {stn_dist:.1f} km van centroid" if stn_dist else ""))
 
-    print(f"[3/5] KNMI fetch ({tmin} - {tmax or 'heden'}) via hydropandas...")
-    try:
-        prec, evap = fetch_recharge_inputs(stn_id, start=tmin, end=tmax)
-        # Hernoem zodat ze matchen met PastaStore-keys
-        prec = prec.rename("neerslag_KNMI")
-        evap = evap.rename("verdamping_KNMI")
-        print(f"  -> {len(prec)} neerslag, {len(evap)} verdamping dagwaarden")
-    except Exception as exc:
-        sys.exit(f"FOUT: KNMI-fetch faalde: {exc}")
+    _say(f"[3/5] KNMI fetch ({tmin} - {tmax or 'heden'}) via hydropandas...")
+    prec, evap = fetch_recharge_inputs(stn_id, start=tmin, end=tmax)
+    prec = prec.rename("neerslag_KNMI")
+    evap = evap.rename("verdamping_KNMI")
+    _say(f"  -> {len(prec)} neerslag, {len(evap)} verdamping dagwaarden")
 
-    print(f"[4/5] PastaStore opbouwen...")
-    work_dir = zip_out.parent / (zip_out.stem + "_work")
-    work_dir.mkdir(parents=True, exist_ok=True)
+    _say("[4/5] PastaStore opbouwen...")
+    work = Path(work_dir) if work_dir else Path(tempfile.mkdtemp(prefix="lesa_bro_"))
+    work.mkdir(parents=True, exist_ok=True)
     adapter = PastaStoreAdapter(
-        location=StoreLocation(backend="pas", path=work_dir, name="lesa_store"),
+        location=StoreLocation(backend="pas", path=work, name="lesa_store"),
     )
     adapter.add_stress(
         name="neerslag_KNMI", series=prec, kind="prec",
@@ -143,7 +129,6 @@ def _build_pastastore_from_bro_loket(
         metadata={"x": float(cx), "y": float(cy), "station": stn_id, "naam": stn_name},
     )
 
-    # Per GMW: per (gld_id, csv) een oseries
     added_oseries: list[str] = []
     for rec in records_with_xy:
         for gld_id, csv_text in rec.gld_csvs:
@@ -158,7 +143,6 @@ def _build_pastastore_from_bro_loket(
                 next(iter(rec.tubes.keys()), 1)
             )
             tube_meta = rec.tubes.get(tube_nr)
-            # Oseries-naam = GMW_tube_GLD (uniek, herkenbaar)
             os_name = f"{rec.gmw_id}_{tube_nr}"
             if os_name in added_oseries:
                 os_name = f"{rec.gmw_id}_{tube_nr}_{gld_id}"
@@ -180,26 +164,23 @@ def _build_pastastore_from_bro_loket(
                 os_meta["tube_top"] = tube_meta.tube_top
             os_meta.setdefault("screen_top", float("nan"))
             os_meta.setdefault("screen_bottom", float("nan"))
-
-            # Strip None-values (pastastore stoort daar over)
             os_meta = {k: v for k, v in os_meta.items() if v is not None}
             s_daily.name = os_name
             try:
                 adapter.add_oseries(name=os_name, series=s_daily, metadata=os_meta)
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001
                 log.warning("add_oseries %s faalde: %s", os_name, exc)
 
-    print(f"  -> {len(added_oseries)} oseries toegevoegd")
+    _say(f"  -> {len(added_oseries)} oseries toegevoegd")
 
-    # PASTAS-fits
     if fit_models and added_oseries:
-        print(f"[5a/5] PASTAS RechargeModel per oseries (rfunc={rfunc})...")
+        _say(f"[5a/5] PASTAS RechargeModel per oseries (rfunc={rfunc})...")
         store = adapter.open()
         n_ok = 0
         for name in added_oseries:
             oseries = store.get_oseries(name)
             if len(oseries) < 100:
-                print(f"  - skip {name}: <100 metingen")
+                _say(f"  - skip {name}: <100 metingen")
                 continue
             cfg = FitConfig(name=name, rfunc=rfunc, noise_model=True)
             try:
@@ -211,22 +192,55 @@ def _build_pastastore_from_bro_loket(
                 if result.success:
                     adapter.add_model(name=name, ml=ml)
                     n_ok += 1
-                    print(f"  + {name}: R^2={result.rsq:.3f}")
+                    _say(f"  + {name}: R^2={result.rsq:.3f}")
                 else:
-                    print(f"  - {name}: fit niet succesvol ({result.error or ''})")
-            except Exception as exc:
-                print(f"  - {name}: crashte ({exc})")
-        print(f"  -> {n_ok}/{len(added_oseries)} modellen gefit")
+                    _say(f"  - {name}: fit niet succesvol ({result.error or ''})")
+            except Exception as exc:  # noqa: BLE001
+                _say(f"  - {name}: crashte ({exc})")
+        _say(f"  -> {n_ok}/{len(added_oseries)} modellen gefit")
 
-    # ZIP exporteren
-    print(f"[5/5] ZIP exporteren naar {zip_out}")
-    store = adapter.open()
-    if zip_out.exists():
-        zip_out.unlink()
-    store.to_zip(str(zip_out))
-    size_kb = zip_out.stat().st_size / 1024
-    print(f"\nKlaar! {zip_out} ({size_kb:.1f} KB)")
-    print(f"Upload dit bestand in pastasdash (http://127.0.0.1:8050).")
+    return adapter.open()
+
+
+def main() -> None:
+    p = argparse.ArgumentParser(prog="lesa-bro-to-pastastore", description=__doc__)
+    p.add_argument("input", help="Pad naar BRO Loket export ZIP")
+    p.add_argument("--output", help="Output ZIP (default: <input>_pastastore.zip)")
+    p.add_argument("--knmi-station", default=None, help="KNMI-stationsnummer")
+    p.add_argument("--tmin", default="2000-01-01")
+    p.add_argument("--tmax", default=None)
+    p.add_argument("--fit-models", action="store_true")
+    p.add_argument("--rfunc", default="Gamma")
+    p.add_argument("-v", "--verbose", action="store_true")
+    args = p.parse_args()
+    logging.basicConfig(level=logging.INFO if args.verbose else logging.WARNING)
+
+    in_path = Path(args.input).resolve()
+    if not in_path.exists():
+        sys.exit(f"FOUT: input ZIP bestaat niet: {in_path}")
+    out_path = Path(args.output) if args.output else in_path.with_name(
+        in_path.stem + "_pastastore.zip"
+    )
+    work_dir = out_path.parent / (out_path.stem + "_work")
+    if work_dir.exists():
+        shutil.rmtree(work_dir)
+
+    store = bro_loket_zip_to_pastastore(
+        in_path,
+        work_dir=work_dir,
+        knmi_station=args.knmi_station,
+        tmin=args.tmin,
+        tmax=args.tmax,
+        fit_models=args.fit_models,
+        rfunc=args.rfunc,
+        verbose=True,
+    )
+    print(f"[5/5] ZIP exporteren naar {out_path}")
+    if out_path.exists():
+        out_path.unlink()
+    store.to_zip(str(out_path))
+    print(f"\nKlaar! {out_path} ({out_path.stat().st_size / 1024:.1f} KB)")
+    print("Upload dit bestand in pastasdash (http://127.0.0.1:8050).")
 
 
 if __name__ == "__main__":
