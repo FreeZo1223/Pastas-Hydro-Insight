@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pastasdash_v2"
+version = "0.1.0"
+description = "NiceGUI-based dashboard voor PASTAS grondwateranalyse met persistente caching."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Friso Schutten" }]
+dependencies = [
+    "nicegui>=2.0",
+    "plotly>=5.20",
+    "pandas>=2.0",
+    "numpy>=1.26",
+    "pastas>=1.5",
+    "pastastore>=1.7",
+    "pyproj>=3.6",
+    "diskcache>=5.6",
+    "hydropandas>=0.14",
+    "pyarrow>=15.0",
+    "geopandas>=1.0",
+    "geo-stack-nl",
+    "pastas-adapter",
+    "lesa-agent",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.4"]
+
+[project.scripts]
+pastasdash-v2 = "pastasdash_v2.cli:main"
+
+[tool.uv.sources]
+geo-stack-nl    = { path = "../../geo_stack", editable = true }
+pastas-adapter  = { path = "../pastas_adapter", editable = true }
+lesa-agent      = { path = "../../lesa-agent-v2/packages/lesa_agent", editable = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["pastasdash_v2"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
