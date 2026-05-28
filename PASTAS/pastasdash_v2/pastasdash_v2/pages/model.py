@@ -9,7 +9,7 @@ from nicegui import ui
 
 from pastasdash_v2.components.header import render_header
 from pastasdash_v2.components.plots import (
-    empty_figure, model_diagnostics_figure, model_results_figure,
+    clean_fig, empty_figure, model_diagnostics_figure, model_results_figure,
 )
 from pastasdash_v2.compute.fitting import FitOptions, fit_model
 from pastasdash_v2.compute.timeseries import model_summary
@@ -97,7 +97,7 @@ def render() -> None:
             info_container.clear()
             if not name:
                 with plot_container:
-                    ui.plotly(empty_figure("Selecteer een peilbuis"))
+                    ui.plotly(clean_fig(empty_figure("Selecteer een peilbuis")))
                 return
             ui_state.set("model.selected", name)
 
@@ -106,16 +106,16 @@ def render() -> None:
                     try:
                         ml = STORE.pstore.get_models(name)
                         ui.label("Resultaten").classes("text-lg font-medium")
-                        ui.plotly(model_results_figure(ml)).classes("w-full")
+                        ui.plotly(clean_fig(model_results_figure(ml))).classes("w-full")
                         ui.label("Diagnostiek").classes("text-lg font-medium mt-4")
-                        ui.plotly(model_diagnostics_figure(ml)).classes("w-full")
+                        ui.plotly(clean_fig(model_diagnostics_figure(ml))).classes("w-full")
                     except Exception as exc:  # noqa: BLE001
                         log.exception("Model laden faalde")
-                        ui.plotly(empty_figure(f"Model laden faalde: {exc}"))
+                        ui.plotly(clean_fig(empty_figure(f"Model laden faalde: {exc}")))
                 else:
-                    ui.plotly(empty_figure(
+                    ui.plotly(clean_fig(empty_figure(
                         f"Nog geen model voor '{name}'. Klik 'Fit / refit' om er een te bouwen."
-                    ))
+                    )))
 
             with info_container:
                 summary = model_summary(STORE.store_key, name) if name in STORE.model_names() else {}

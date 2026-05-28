@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import logging
 
+import pandas as pd
 from nicegui import ui
 
 from pastasdash_v2.components.header import render_header
 from pastasdash_v2.components.plots import (
-    empty_figure, map_oseries, timeseries_overlay, timeseries_stacked,
+    clean_fig, empty_figure, map_oseries, timeseries_overlay, timeseries_stacked,
 )
 from pastasdash_v2.compute.timeseries import get_oseries, get_stress
 from pastasdash_v2.state.store import STORE
@@ -36,18 +37,23 @@ def render() -> None:
             with ui.column().classes("flex-1 min-w-0"):
                 ui.label("Kaart").classes("text-lg font-medium")
                 map_fig = map_oseries(df, selected=selected)
-                map_plot = ui.plotly(map_fig).classes("w-full")
+                map_plot = ui.plotly(clean_fig(map_fig)).classes("w-full")
 
                 ui.label("Peilbuizen").classes("text-lg font-medium mt-4")
 
-                rows = [
-                    {
+                rows = []
+                for name, row in df.iterrows():
+                    n_val = row.get("n_observations")
+                    n_int = 0 if pd.isna(n_val) else int(n_val)
+                    
+                    z_val = row.get("z")
+                    z_round = round(float(z_val), 2) if not pd.isna(z_val) else ""
+                    
+                    rows.append({
                         "name": name,
-                        "n": int(row.get("n_observations", 0) or 0),
-                        "z": round(float(row.get("z", 0) or 0), 2) if row.get("z") is not None else "",
-                    }
-                    for name, row in df.iterrows()
-                ]
+                        "n": n_int,
+                        "z": z_round,
+                    })
                 cols = [
                     {"name": "name", "label": "Naam", "field": "name", "sortable": True, "align": "left"},
                     {"name": "n",    "label": "N obs", "field": "n", "sortable": True},
@@ -72,7 +78,7 @@ def render() -> None:
                     plot_holder.clear()
                     with plot_holder:
                         if not selected:
-                            ui.plotly(empty_figure("Selecteer peilbuizen in de kaart of tabel.")).classes(
+                            ui.plotly(clean_fig(empty_figure("Selecteer peilbuizen in de kaart of tabel."))).classes(
                                 "w-full"
                             )
                             return
@@ -88,14 +94,14 @@ def render() -> None:
                             if layout_radio.value == "stacked"
                             else timeseries_overlay(series)
                         )
-                        ui.plotly(fig).classes("w-full")
+                        ui.plotly(clean_fig(fig)).classes("w-full")
 
                 def _on_table_select() -> None:
                     nonlocal selected
                     selected = [r["name"] for r in table.selected]
                     ui_state.set("overview.selected", selected)
                     # update kaart
-                    map_plot.figure = map_oseries(df, selected=selected)
+                    map_plot.figure = clean_fig(map_oseries(df, selected=selected))
                     map_plot.update()
                     _redraw()
 

@@ -195,3 +195,10 @@ def droogte_figure(
         hovermode="x unified",
     )
     return fig
+
+
+def clean_fig(fig: go.Figure) -> dict:
+    """Zorgt dat de figuur 100% JSON-serialiseerbaar is (geen Timestamp- of NaN-crashes in NiceGUI)."""
+    import json
+    return json.loads(fig.to_json())
+

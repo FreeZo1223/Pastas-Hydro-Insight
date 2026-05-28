@@ -8,7 +8,7 @@ from datetime import date
 from nicegui import ui
 
 from pastasdash_v2.components.header import render_header
-from pastasdash_v2.components.plots import empty_figure, droogte_figure
+from pastasdash_v2.components.plots import clean_fig, empty_figure, droogte_figure
 from pastasdash_v2.compute import droogte as droogte_compute
 from pastasdash_v2.compute.knmi import fetch_knmi_daily
 from pastasdash_v2.compute.stations import DEFAULT_STATION_CODE, STATIONS_BY_CODE, station_label_map
@@ -62,7 +62,7 @@ def render() -> None:
             ui.label("Cumulatief neerslagtekort").classes("text-lg font-medium")
             plot_holder = ui.column().classes("w-full")
             with plot_holder:
-                ui.plotly(empty_figure("Klik 'Vernieuwen' om de plot te bouwen.")).classes("w-full")
+                ui.plotly(clean_fig(empty_figure("Klik 'Vernieuwen' om de plot te bouwen."))).classes("w-full")
 
         async def _compute_and_plot() -> None:
             # parse + persist
@@ -108,7 +108,7 @@ def render() -> None:
             )
             plot_holder.clear()
             with plot_holder:
-                ui.plotly(fig).classes("w-full")
+                ui.plotly(clean_fig(fig)).classes("w-full")
 
         def _trigger() -> None:
             ui.timer(0.01, _compute_and_plot, once=True)

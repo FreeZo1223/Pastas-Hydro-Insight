@@ -79,10 +79,10 @@ def gxg(store_key: str, name: str) -> dict:
 @memoize("model_results")
 def model_summary(store_key: str, model_name: str) -> dict:
     """Korte modelsamenvatting (R², EVP, parameters)."""
-    ml = STORE.pstore.get_models(model_name)
-    if ml is None:
-        return {}
     try:
+        ml = STORE.pstore.get_models(model_name)
+        if ml is None:
+            return {}
         stats = ml.stats.summary()
         return {
             "rsq": float(stats.loc["Rsq", "Value"]) if "Rsq" in stats.index else np.nan,

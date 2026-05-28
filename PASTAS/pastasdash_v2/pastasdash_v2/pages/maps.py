@@ -10,7 +10,7 @@ import plotly.graph_objects as go
 from nicegui import ui
 
 from pastasdash_v2.components.header import render_header
-from pastasdash_v2.components.plots import empty_figure
+from pastasdash_v2.components.plots import clean_fig, empty_figure
 from pastasdash_v2.compute.timeseries import gxg, model_summary
 from pastasdash_v2.state.store import STORE
 from pastasdash_v2.tasks import run_in_thread
@@ -63,9 +63,9 @@ def render() -> None:
             plot_holder.clear()
             with plot_holder:
                 if df.empty:
-                    ui.plotly(empty_figure("Geen data voor deze statistiek")).classes("w-full")
+                    ui.plotly(clean_fig(empty_figure("Geen data voor deze statistiek"))).classes("w-full")
                     return
-                ui.plotly(_build_choropleth(df, select.value, colormap.value, reverse.value)).classes("w-full")
+                ui.plotly(clean_fig(_build_choropleth(df, select.value, colormap.value, reverse.value))).classes("w-full")
 
         select.on_value_change(lambda _e: _redraw())
         colormap.on_value_change(lambda _e: _redraw())

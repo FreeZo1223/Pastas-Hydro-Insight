@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 from nicegui import ui
 
 from pastasdash_v2.components.header import render_header
-from pastasdash_v2.components.plots import empty_figure
+from pastasdash_v2.components.plots import clean_fig, empty_figure
 from pastasdash_v2.compute.timeseries import model_summary
 from pastasdash_v2.state.store import STORE
 
@@ -52,7 +52,7 @@ def render() -> None:
             ui_state.set("compare.selected", list(names))
             if not names:
                 with chart_holder:
-                    ui.plotly(empty_figure("Selecteer minimaal één model")).classes("w-full")
+                    ui.plotly(clean_fig(empty_figure("Selecteer minimaal één model"))).classes("w-full")
                 return
 
             # vergelijking-chart: alle simulaties + obs
@@ -77,7 +77,7 @@ def render() -> None:
                 yaxis_title="m NAP",
             )
             with chart_holder:
-                ui.plotly(fig).classes("w-full")
+                ui.plotly(clean_fig(fig)).classes("w-full")
 
             # samenvattingstabel
             rows = []
