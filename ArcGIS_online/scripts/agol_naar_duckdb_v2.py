@@ -21,6 +21,8 @@ Gebruik:
 
 import os
 import json
+import subprocess
+import sys
 import time
 import argparse
 import warnings
@@ -28,7 +30,7 @@ import duckdb
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 # Laad .env aan het begin — expliciet pad zodat Task Scheduler het ook vindt
@@ -50,6 +52,7 @@ PARQUET_MAP    = str(DATABEHEER / "01_parquet" / "latest")
 DUCKDB_PAD     = str(DATABEHEER / "00_kern" / "ewaarnemingen.duckdb")
 MAPPING_PAD    = str(DATABEHEER / "05_context" / "field_mapping.json")
 CHECKPOINT_PAD = str(_SCRIPT_DIR / "pipeline_checkpoint.json")
+STAGING_ROOT   = DATABEHEER / "06_staging"
 LOG_PAD        = str(DATABEHEER / "03_logs" / f"pipeline_{datetime.now().strftime('%Y%m%d')}.log")
 ENV_PAD        = str(_SCRIPT_DIR.parent / ".env")
 
@@ -762,6 +765,82 @@ def maak_df_duckdb_veilig(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+# ─────────────────────────────────────────────
+# STAGING — fetch-resultaten tussentijds opslaan
+# zodat de DuckDB-write in een apart subprocess kan draaien
+# ─────────────────────────────────────────────
+
+def sla_staging_op(alle_data: dict[str, pd.DataFrame], run_stempel: str) -> Path:
+    """Sla alle verwerkte DataFrames op als parquets in een staging-directory.
+
+    Elke run krijgt een eigen map (run_stempel = YYYYMMDD_HHMM).
+    Schrijft ook een manifest.json met verwachte rij-aantallen zodat de
+    writer onafhankelijk kan valideren.
+
+    Returns het pad naar de staging-directory.
+    """
+    staging_dir = STAGING_ROOT / run_stempel
+    staging_dir.mkdir(parents=True, exist_ok=True)
+
+    manifest: dict[str, dict] = {"tabellen": {}}
+
+    for soortgroep, df in alle_data.items():
+        tabel = (f"waarnemingen_{soortgroep.lower()}"
+                 .replace(" ", "_").replace("ë", "e").replace("é", "e")
+                 .replace("à", "a").replace("ö", "o"))
+        bestandsnaam = f"{tabel}.parquet"
+        pad = staging_dir / bestandsnaam
+
+        df_veilig = maak_df_duckdb_veilig(df)
+        df_veilig.to_parquet(pad, index=False)
+
+        manifest["tabellen"][tabel] = {
+            "bestand":       bestandsnaam,
+            "soortgroep":    soortgroep,
+            "verwacht_rijen": len(df_veilig),
+            "geschreven_op": datetime.now().isoformat(),
+        }
+        print(f"  💾 {tabel}: {len(df_veilig):,} rijen → {bestandsnaam}", flush=True)
+
+    manifest_pad = staging_dir / "manifest.json"
+    manifest_pad.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    print(f"  📋 Manifest geschreven: {len(manifest['tabellen'])} tabellen")
+    return staging_dir
+
+
+def ruim_oude_stagings_op(max_leeftijd_uren: int = 48) -> None:
+    """Verwijder staging-dirs ouder dan max_leeftijd_uren (standaard 48u)."""
+    import shutil
+    if not STAGING_ROOT.exists():
+        return
+    grens = datetime.now() - timedelta(hours=max_leeftijd_uren)
+    for sub in STAGING_ROOT.iterdir():
+        if not sub.is_dir():
+            continue
+        try:
+            mtime = datetime.fromtimestamp(sub.stat().st_mtime)
+            if mtime < grens:
+                shutil.rmtree(sub)
+                print(f"  🗑️  Oude staging verwijderd: {sub.name}")
+        except Exception:
+            pass
+
+
+def roep_writer_aan(staging_dir: Path) -> int:
+    """Start duckdb_writer.py als subprocess en retourneer exit-code.
+
+    Isolated process = eigen heap = heap-corruption raakt de fetcher niet.
+    WAL bij crash is geïsoleerd tot het writer-process.
+    """
+    writer_script = _SCRIPT_DIR / "duckdb_writer.py"
+    print(f"\n  🚀 DuckDB Writer starten als subprocess...", flush=True)
+    result = subprocess.run(
+        [sys.executable, str(writer_script), "--staging", str(staging_dir)],
+        # stdout/stderr niet capturen — output stroomt door naar ons log via Tee
+    )
+    return result.returncode
+
+
 # Drempelwaarden voor chunked write — beschermt tegen STATUS_HEAP_CORRUPTION
 # (gezien op Vogels-tabel, 84k rijen) bij grote DataFrame → Parquet → DuckDB.
 CHUNKED_WRITE_THRESHOLD = 50_000
@@ -1001,8 +1080,6 @@ def preflight_check() -> bool:
 # ─────────────────────────────────────────────
 
 def main(hervat: bool = False):
-    import sys
-
     # Optionele Sentry-integratie — no-op zonder SENTRY_DSN, geen verstoring.
     # Geeft visibility op uncaught exceptions in productie-runs.
     try:
@@ -1031,6 +1108,9 @@ def main(hervat: bool = False):
     print("  ♻️  Retry met exponential backoff: ACTIEF")
     print("  💾 Checkpointing: ACTIEF")
     print("=" * 60)
+
+    # Ruim staging-dirs ouder dan 48u op (mislukte writes van vorige runs)
+    ruim_oude_stagings_op()
 
     print("\n🔍 Preflight checks ...")
     if not preflight_check():
@@ -1123,9 +1203,23 @@ def main(hervat: bool = False):
         print(f"   ✅ {len(gecombineerd)} rijen totaal", flush=True)
 
     maak_gap_rapport(alle_data)
-    print(f"\n  💾 Schrijven naar DuckDB ...", flush=True)
-    schrijf_naar_duckdb(alle_data, DUCKDB_PAD)
-    print(f"  ✅ DuckDB schrijven klaar", flush=True)
+
+    # Sla verwerkte data op als staging-parquets en roep writer aan als subprocess.
+    # Dit isoleert de DuckDB-write (en evt. heap-corruption) van dit fetch-process.
+    run_stempel = datetime.now().strftime("%Y%m%d_%H%M")
+    print(f"\n{'='*60}", flush=True)
+    print(f"  💾 STAGING ({run_stempel})", flush=True)
+    print(f"{'='*60}", flush=True)
+    staging_dir = sla_staging_op(alle_data, run_stempel)
+
+    writer_exit = roep_writer_aan(staging_dir)
+    if writer_exit != 0:
+        print(f"\n❌ DuckDB Writer faalde (exit {writer_exit}) — staging bewaard: {staging_dir}")
+        sys.stdout = sys.__stdout__
+        log_fh.close()
+        raise SystemExit(writer_exit)
+
+    print(f"\n  ✅ DuckDB schrijven klaar", flush=True)
 
     # Checkpoint opruimen na succesvolle run
     verwijder_checkpoint()
