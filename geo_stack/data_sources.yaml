@@ -64,15 +64,49 @@ services:
         en samen te voegen. Vereist: rasterio met GDAL VSIcurl-ondersteuning.
         Automatisch ingeschakeld door fetch_ahn_tile(fetch_method='auto') bij grote AOIs.
 
+  # ── Luchtfoto (PDOK Beeldmateriaal HWH) ───────────────────────────────────
+  luchtfoto:
+    - label: Luchtfoto RGB (PDOK HWH ortho)
+      endpoint: "https://service.pdok.nl/hwh/luchtfotorgb/wms/v1_0"
+      service_type: WMS
+      source_version: "Beeldmateriaal Actueel (RGB)"
+      update_cadence: jaarlijks
+      default_crs: "EPSG:28992"
+      module: "geo_stack.skills.luchtfoto.fetch_luchtfoto"
+      layers:
+        Actueel_orthoHR: 8cm RGB ortho (hoogste resolutie)
+        Actueel_ortho25: 25cm RGB ortho
+      note: "Jaarlagen ook beschikbaar: 2017_… t/m 2026_orthoHR / _ortho25."
+    - label: Luchtfoto CIR / kleureninfrarood (PDOK HWH ortho)
+      endpoint: "https://service.pdok.nl/hwh/luchtfotocir/wms/v1_0"
+      service_type: WMS
+      source_version: "Beeldmateriaal Actueel (CIR)"
+      update_cadence: jaarlijks
+      default_crs: "EPSG:28992"
+      module: "geo_stack.skills.luchtfoto.fetch_luchtfoto"
+      layers:
+        Actueel_orthoHRIR: 8cm kleureninfrarood (kanaal1=NIR, 2=rood, 3=groen)
+        Actueel_ortho25IR: 25cm kleureninfrarood
+      note: |
+        False-color CIR: band1=NIR, band2=rood, band3=groen. Pseudo-NDVI =
+        (NIR-rood)/(NIR+rood). DN-waarden (0-255), geen gekalibreerde reflectie;
+        drempel visueel ijken. WMS-limiet ~4000px/request → skill tegelt automatisch.
+
   # ── BRO — Bodem, Geomorfologie, REGIS ─────────────────────────────────────
   bro_bodemkaart:
-    - label: BRO Bodemkaart WFS
-      endpoint: "https://service.pdok.nl/bzk/basisregistratieondergrond/wfs/v1_0"
+    - label: BRO Bodemkaart WFS (WUR/BIS Nederland)
+      endpoint: "https://maps.bodemdata.nl/geoserver/wfs"
       service_type: WFS
-      source_version: "BRO Bodemkaart 1:50000"
+      source_version: "BRO Bodemkaart 1:50000 v2025 (WUR/BIS Nederland)"
       update_cadence: onregelmatig
       cql_filter: true
       default_crs: "EPSG:28992"
+      typename: "bodem:Bodemkaart50000_v2025"
+      module: "geo_stack.skills.bro.bodemkaart.fetch_bodemkaart"
+      note: |
+        Sinds eind 2025 gehost door WUR/BIS Nederland op maps.bodemdata.nl,
+        niet meer via PDOK. Typename: bodem:Bodemkaart50000_v2025.
+        Bevat bodemtype, grondwatertrap (Gt), bodemhorizont.
 
   bro_geomorfologie:
     - label: BRO Geomorfologische kaart WFS
@@ -129,7 +163,10 @@ services:
       update_cadence: jaarlijks
       cql_filter: true
       default_crs: "EPSG:28992"
-      note: "Filter op jaar=2024 via CQL_FILTER — werkt bij RVO (niet tile-cached)"
+      typename: "BrpGewas"
+      module: "geo_stack.skills.wfs_generic.fetch_wfs"
+      generic: true
+      note: "B11/C4 — filter op jaar=2024 via CQL_FILTER werkt bij RVO (niet tile-cached). Geef desgewenst typename/cql_filter mee."
 
   # ── Topotijdreis ───────────────────────────────────────────────────────────
   topotijdreis:
@@ -349,3 +386,382 @@ services:
       module: "geo_stack.skills.gee.fetch_alpha_earth"
       note: |
         Skipt Google Drive — gebruikt ee.data.computePixels in tegels.
+
+  # ══ BKN-bronnen ════════════════════════════════════════════════════════════
+  # Toegevoegd voor de Basiskwaliteit Natuur-pipeline (BKN_projecten). Voorheen
+  # hardcoded in pipeline/src/reference/condities_bronnen.json — nu via geo_stack
+  # met retry + cache + provenance. Generieke fetchers (service_type bepaalt de
+  # route in fetch.py): WFS → wfs_generic, WMS → wms_raster, ARCGIS_REST →
+  # arcgis_rest. Een nieuwe gelijksoortige bron = alleen een entry hier, geen code.
+
+  # ── AtlasNK (Atlas Natuurlijk Kapitaal) — styled WMS-lagen ─────────────────
+  atlasnk:
+    - label: AtlasNK GeoServer WMS (styled rasterlagen)
+      endpoint: "https://geo.atlasnatuurlijkkapitaal.nl/geoserver/ows"
+      service_type: WMS
+      source_version: "AtlasNK (RIVM)"
+      update_cadence: onregelmatig
+      default_crs: "EPSG:28992"
+      module: "geo_stack.skills.wms_raster.fetch_wms_raster"
+      generic: true
+      layers:
+        groenkaart_lage_vegetatie: "B2 — % lage vegetatie per 100m grid"
+        groenkaart_struiken: "B5 — struiklaag"
+        groenkaart_bomen: "B6 — boomkroon"
+        groenkaart_bomenhoogte: "B6 — bomenhoogte"
+        lichtemissie_nacht: "A7 — lichtemissie (proxy donkerte)"
+        geluid_lden: "A8 — geluid Lden"
+        toxische_druk_bodem: "A2 — mengsel toxische druk bodem"
+        toxische_druk_water: "A6 — mengsel toxische druk water"
+        soortendiversiteit: "B11 — soortendiversiteit"
+        ecologisch_kapitaal_bodem: "A1/B8 — ecologisch kapitaal bodem"
+        ecosysteemtypen: "ecosysteemtypenkaart"
+      warning: |
+        Styled WMS = gerenderd beeld, geen meetwaarde → PROXY. Laagnamen
+        indicatief; verifieer via GetCapabilities (geo.atlasnatuurlijkkapitaal.nl/
+        geoserver/ows?SERVICE=WMS&REQUEST=GetCapabilities). Geef de exacte laag
+        mee via kwarg ``layer=``.
+
+  # ── NHI grondwater (Nationaal Hydrologisch Instrumentarium) — WMS ──────────
+  nhi:
+    - label: NHI grondwater WMS (GHG/GLG modeluitvoer)
+      endpoint: "https://service.pdok.nl/rws/nhi/wms/v1_0"
+      service_type: WMS
+      source_version: "NHI"
+      update_cadence: onregelmatig
+      default_crs: "EPSG:28992"
+      module: "geo_stack.skills.wms_raster.fetch_wms_raster"
+      generic: true
+      note: "B14 — GHG/GLG modeluitvoer ~250m. Geef ``layer=`` mee."
+
+  # ── RIVM nachtlicht (Atlas Leefomgeving) — WMS ─────────────────────────────
+  rivm_nachtlicht:
+    - label: Atlas Leefomgeving — Nachtelijk licht (VIIRS) WMS
+      endpoint: "https://geodata.rivm.nl/arcgis/rest/services/Atlas_Leefomgeving/Nachtelijk_licht/MapServer/WMSServer"
+      service_type: WMS
+      source_version: "VIIRS via RIVM"
+      update_cadence: onregelmatig
+      default_crs: "EPSG:28992"
+      module: "geo_stack.skills.wms_raster.fetch_wms_raster"
+      generic: true
+      warning: "A7 — RIVM-endpoint was tijdelijk 503/404 in Alkmaar-run; verifieer bereikbaarheid. Fallback: atlasnk lichtemissie_nacht."
+
+  # ── Bodemloket (RIVM/BIS) — WMS ────────────────────────────────────────────
+  bodemloket:
+    - label: Bodemloket WMS (bekende verontreinigingslocaties)
+      endpoint: "https://service.pdok.nl/rivm/bodemloket/wms/v1_0"
+      service_type: WMS
+      source_version: "Bodemloket"
+      update_cadence: onregelmatig
+      default_crs: "EPSG:28992"
+      module: "geo_stack.skills.wms_raster.fetch_wms_raster"
+      generic: true
+      note: "A2 — alleen onderzochte locaties; ononderzocht ≠ schoon. Geef ``layer=`` mee."
+
+  # ── BAG panden — WFS (vector; aanvulling op cloud-native bag) ──────────────
+  bag_wfs:
+    - label: BAG WFS v2 (panden, vector)
+      endpoint: "https://service.pdok.nl/lv/bag/wfs/v2_0"
+      service_type: WFS
+      source_version: "BAG"
+      update_cadence: dagelijks
+      cql_filter: true
+      default_crs: "EPSG:28992"
+      typename: "bag:pand"
+      module: "geo_stack.skills.wfs_generic.fetch_wfs"
+      generic: true
+      note: "B7 — bouwjaar + footprint; hoogte via AHN4-overlay. Voor bulk: gebruik cloud-native ``bag``."
+
+  # ── Monumentale bomen (RCE) — WFS ──────────────────────────────────────────
+  monumentale_bomen:
+    - label: Monumentale Bomen NL (RCE) WFS
+      endpoint: "https://service.pdok.nl/rce/monumentale-bomen/wfs/v1_0"
+      service_type: WFS
+      source_version: "RCE Monumentale Bomen"
+      update_cadence: onregelmatig
+      cql_filter: true
+      default_crs: "EPSG:28992"
+      typename: "monumentale-bomen:monumentale_boom"
+      module: "geo_stack.skills.wfs_generic.fetch_wfs"
+      generic: true
+      note: "B12 — vrijwillige registratie; ondervertegenwoordiging mogelijk."
+
+  # ── ANLb subsidiegebieden (RVO) — WFS ──────────────────────────────────────
+  anlb:
+    - label: ANLb subsidiegebieden (RVO) WFS
+      endpoint: "https://service.pdok.nl/rvo/anlb/wfs/v1_0"
+      service_type: WFS
+      source_version: "ANLb"
+      update_cadence: jaarlijks
+      cql_filter: true
+      default_crs: "EPSG:28992"
+      module: "geo_stack.skills.wfs_generic.fetch_wfs"
+      generic: true
+      note: "C1/C4 — agrarisch natuur- en landschapsbeheer. Geef ``typename=`` mee (verifieer via GetCapabilities)."
+
+  # ── NNN (Natuurnetwerk Nederland, BIJ12) — WFS ─────────────────────────────
+  nnn:
+    - label: Natuurnetwerk Nederland (BIJ12) WFS
+      endpoint: "https://service.pdok.nl/bij12/natuurnetwerknederland/wfs/v1_0"
+      service_type: WFS
+      source_version: "NNN (BIJ12)"
+      update_cadence: onregelmatig
+      cql_filter: true
+      default_crs: "EPSG:28992"
+      module: "geo_stack.skills.wfs_generic.fetch_wfs"
+      generic: true
+      note: "Beleidslaag — overlap gemeentegrens. Geef ``typename=`` mee."
+
+  # ── HHNK leggers — ArcGIS REST (publiek, zonder inlog) ─────────────────────
+  hhnk_oevers:
+    - label: HHNK legger — oevers en bergingsgebieden (ArcGIS REST)
+      endpoint: "https://kaarten.hhnk.nl/arcgis/rest/services/od_legger/od_legger_wateren_2025_oevers_en_bergingsgebieden_vg/MapServer"
+      service_type: ARCGIS_REST
+      source_version: "HHNK legger 2025"
+      update_cadence: onregelmatig
+      default_crs: "EPSG:28992"
+      module: "geo_stack.skills.arcgis_rest.fetch_arcgis"
+      generic: true
+      layers:
+        1: "Natuurvriendelijke oever en rietoever derden (vastgesteld)"
+        2: "Rietoever HHNK (vastgesteld)"
+        3: "Natuurvriendelijke oever HHNK (vastgesteld)"
+        4: "Bergingsgebieden (vastgesteld)"
+      note: "B9 — directe NVO-meting (vervangt proxy). Geef ``layer_id=`` mee. Waterschap-specifiek (alleen HHNK-werkgebied)."
+
+  hhnk_oppervlaktewateren:
+    - label: HHNK legger — oppervlaktewateren (ArcGIS REST)
+      endpoint: "https://kaarten.hhnk.nl/arcgis/rest/services/od_legger/od_legger_wateren_2025_oppervlaktewateren_vg/MapServer"
+      service_type: ARCGIS_REST
+      source_version: "HHNK legger 2025"
+      update_cadence: onregelmatig
+      default_crs: "EPSG:28992"
+      module: "geo_stack.skills.arcgis_rest.fetch_arcgis"
+      generic: true
+      layers:
+        0: "Waterlopen per categorie (vastgesteld)"
+        1: "Waterlopen onderhoudsplichtigen (vastgesteld)"
+        2: "Waterlopen maximale begroeiingsgraad (vastgesteld)"
+      note: "B10 — categorisering waterlopen/poelen. Geef ``layer_id=`` mee."
+
+  # ── Bronnen zonder generieke fetcher — bespoke REST (nog handmatig) ────────
+  # Geregistreerd voor vindbaarheid + provenance; eigen schema vereist een
+  # dedicated skill. Niet hand-rollen zonder noodzaak (anti-verzin-doctrine).
+  waterkwaliteitsportaal:
+    - label: Waterkwaliteitsportaal (KRW-meetpunten)
+      endpoint: "https://www.waterkwaliteitsportaal.nl/oppervlaktewaterkwaliteit/api/v1"
+      service_type: REST
+      source_version: "Waterkwaliteitsportaal"
+      update_cadence: onregelmatig
+      auth_required: false
+      generic: false
+      warning: |
+        A4/A5/A6 — bespoke JSON-API, GEEN generieke fetcher. URL was deels dood
+        in eerdere BKN-run → verifieer bereikbaarheid eerst. Vereist dedicated
+        skill (EKR/nutriënten per waterlichaam). Tot dan: HANDMATIG.
+
+  ep_online:
+    - label: EP-Online energielabels (RVO)
+      endpoint: "https://public.ep-online.nl/api/v4"
+      service_type: REST
+      source_version: "EP-Online v4"
+      update_cadence: continu
+      auth_required: true
+      generic: false
+      warning: |
+        B7 — vereist API-key (RVO). Bespoke schema; geen generieke fetcher.
+        Label A/B ≈ geïsoleerd = minder verblijfplaatsen. Tot dedicated skill:
+        HANDMATIG met gedocumenteerde key.
+
+  # ── LGN (Landelijk Grondgebruik Nederland) — WMS + lokaal raster ───────────
+  lgn:
+    - label: LGN WMS (PDOK/WUR)
+      endpoint: "https://service.pdok.nl/wur/lgn/wms/v1_0"
+      service_type: WMS
+      source_version: "LGN2024"
+      update_cadence: jaarlijks
+      default_crs: "EPSG:28992"
+      module: "geo_stack.skills.lgn.clip_lgn"
+      layers:
+        lgn: "LGN landgebruiksraster (klassen 1-45)"
+      note: |
+        Primaire route: lokaal bestand C:\GIS_Projecten\BKN_projecten\data_groot\LGN2024\LGN2024.tif
+        (clip_lgn gebruikt dit bij voorkeur). WMS als fallback voor visualisatie.
+        Gebruik lgn_reclass (geo_stack.skills.lgn_reclass.apply_reclass) voor omzetting
+        naar ConScape quality/affinity matrices. Resolutie: 25m.
+
+  # ── LASREG (Landschapselementen Register, WUR/NEO) ─────────────────────────
+  lasreg:
+    - label: LASREG GeoPackage download (WUR/NEO)
+      endpoint: "https://lasreg.containers.wur.nl"
+      service_type: REST
+      source_version: "LASREG 2023"
+      update_cadence: jaarlijks
+      auth_required: false
+      license: "CC-BY 4.0"
+      module: "geo_stack.skills.wfs_generic.fetch_wfs"
+      generic: false
+      note: |
+        B1/B3/B13 — Landschapselementen (heggen, houtwallen, poelen, etc.)
+        Download per gemeente als GeoPackage via portal; geen WFS/API-access.
+        Registratie op portaal vereist. Laagnamen: groene_elementen, blauwe_elementen.
+        HANDMATIG: download via lasreg.containers.wur.nl → sla op als
+        cache/lasreg/{gemeente_code}_lasreg.gpkg.
+        Waterschap-specifieke legger (hhnk_oppervlaktewateren) is alternatief voor B10.
+
+  # ── HHNK KRW waterkwaliteit — ArcGIS REST ──────────────────────────────────
+  hhnk_krw_kwaliteit:
+    - label: HHNK KRW waterkwaliteit oordeel (ArcGIS REST)
+      endpoint: "https://kaarten.hhnk.nl/arcgis/rest/services/WBP/wbp_krw_waterkwaliteit_oordeel/MapServer"
+      service_type: ARCGIS_REST
+      source_version: "HHNK KRW WBP"
+      update_cadence: onregelmatig
+      default_crs: "EPSG:28992"
+      module: "geo_stack.skills.arcgis_rest.fetch_arcgis"
+      generic: true
+      layers:
+        0: "NTOT — totaal stikstof oordeel (A5)"
+        3: "PTOT — totaal fosfor oordeel (A4)"
+        7: "MAFAUNA — macrofauna oordeel (A5 biologie)"
+        10: "OVWFLORA — overige waterflora oordeel (A4/A5)"
+      note: "A4/A5 — EKR-oordelen per KRW-waterlichaam. Geef ``layer_id=`` mee. Waterschap-specifiek (HHNK-werkgebied)."
+
+  # ── HHNK peilgebieden — ArcGIS REST (bevestigd werkend 2026-06-02) ──────────
+  hhnk_peilgebieden:
+    - label: HHNK peilgebieden (ArcGIS REST)
+      endpoint: "https://kaarten.hhnk.nl/arcgis/rest/services/ws/WS_Peilgebieden/MapServer"
+      service_type: ARCGIS_REST
+      source_version: "HHNK peilbeheer"
+      update_cadence: onregelmatig
+      default_crs: "EPSG:28992"
+      module: "geo_stack.skills.arcgis_rest.fetch_arcgis"
+      generic: true
+      layers:
+        0: "Peilgebieden (vastgesteld streefpeil)"
+      note: "B14 — streefpeilen per peilgebied. Werkend bevonden 2026-06-02. Waterschap-specifiek (HHNK)."
+
+  # ── HHNK GeoServer — WFS (legger + KRW waterlichamen) ──────────────────────
+  hhnk_geoserver:
+    - label: HHNK GeoServer WFS
+      endpoint: "https://geoservices.hhnk.nl/geoserver/hhnk/ows"
+      service_type: WFS
+      source_version: "HHNK GeoServer"
+      update_cadence: onregelmatig
+      cql_filter: true
+      default_crs: "EPSG:28992"
+      module: "geo_stack.skills.wfs_generic.fetch_wfs"
+      generic: true
+      feature_types:
+        - hhnk:legger_watergangen
+        - hhnk:oppervlaktewater
+        - hhnk:krw_waterlichamen
+      note: |
+        B10/B14 — legger watergangen + KRW waterlichamen. Geef ``typename=`` mee.
+        Waterschap-specifiek (HHNK-werkgebied). Fallback als arcgis-legger niet
+        werkt. krw_waterlichamen = polygonen; legger_watergangen = lijnen.
+
+  # ── KRW landelijk — Rijkswaterstaat GeoServer WFS ──────────────────────────
+  krw_landelijk:
+    - label: KRW oppervlaktewaterlichamen NL (Rijkswaterstaat GeoServer)
+      endpoint: "https://geoservices.rijkswaterstaat.nl/apps/geoserver/ows"
+      service_type: WFS
+      source_version: "KRW NL"
+      update_cadence: onregelmatig
+      cql_filter: true
+      default_crs: "EPSG:28992"
+      typename: "rws:krw_oppervlaktewaterlichamen_vlak"
+      module: "geo_stack.skills.wfs_generic.fetch_wfs"
+      generic: true
+      note: "A4/A5/B10 — landsdekkende KRW-waterlichamen als vlakken. Gebruik als fallback als HHNK-specifieke bron ontbreekt."
+
+  # ── KRW meetpunten — PDOK INSPIRE Atom ────────────────────────────────────
+  krw_meetpunten:
+    - label: KRW monitoring locaties geharmoniseerd (PDOK INSPIRE Atom)
+      endpoint: "https://service.pdok.nl/ihw/krw-monitoringlocaties-geharmoniseerd/atom/downloads/INSPIREMonitoringSite.gml"
+      service_type: REST
+      source_version: "KRW INSPIRE NL"
+      update_cadence: jaarlijks
+      auth_required: false
+      generic: false
+      note: |
+        A4/A5 — INSPIRE GML download van alle KRW-meetpunten. Eenmalige bulk-download,
+        dan client-side filteren op gemeente/waterlichaam. Combineer met
+        waterkwaliteitsportaal voor meetwaarden per punt.
+        Download als GML; converteer naar GeoPackage via ogr2ogr.
+
+  # ── BeSI (Biodiversiteits Stimulerings Index) — lokale VRT ─────────────────
+  besi:
+    - label: BeSI landsdekkend raster (lokale VRT)
+      service_type: LOCAL_RASTER
+      source_version: "BeSI"
+      update_cadence: onregelmatig
+      local_path: "BeSI/BESI_Master.vrt"
+      module: "geo_stack.skills.besi_fetcher.fetch_besi"
+      default_crs: "EPSG:28992"
+      note: |
+        B11 — BeSI-score als biodiversiteitsindicator. Lokale VRT (virtual raster)
+        die meerdere GeoTIFFs samenbindt; vereist dat de BeSI-bestanden aanwezig
+        zijn in het werkpad (niet beschikbaar via publieke API).
+        besi_fetcher.py implementeert de clip + statistieken per AOI.
+
+  # ── NEO Boomstampositie BGT — REST API ─────────────────────────────────────
+  neo_bomen:
+    - label: NEO Boomstampositie BGT API (SignalEyes/NEO)
+      endpoint: "https://boomstampositieBGT.signaleyes.nl"
+      service_type: REST
+      source_version: "NEO Boomstampositie BGT"
+      update_cadence: onregelmatig
+      auth_required: false
+      license: "CC BY-NC-SA 4.0"
+      generic: false
+      note: |
+        B6/B12 — individuele boomstamposities op basis van BGT vegetatieobjecten +
+        puntenwolk-detectie (NEO/Cyclomedia). Bespoke REST-API; geen generieke
+        WFS-fetcher beschikbaar. Geeft punten met diameter/hoogte-attributen.
+        Let op licentie: BY-NC-SA (niet commercieel zonder toestemming).
+        HANDMATIG of dedicated skill nodig voor bulk-aanvraag.
+
+  # ── Waarneming.nl — REST API (biodiversiteitsregistraties) ─────────────────
+  waarneming_nl:
+    - label: Waarneming.nl observaties API
+      endpoint: "https://waarneming.nl/api/v1/observations/"
+      service_type: REST
+      source_version: "Waarneming.nl v1"
+      update_cadence: continu
+      auth_required: false
+      generic: false
+      note: |
+        B11/C3 — burgerwetenschapsdata (soortobservaties Nederland).
+        Paginerende JSON-API; filter op taxon, datum, bbox.
+        Geen officieel georeferenced dataverdrag → gebruik als aanvulling,
+        niet als primaire bron voor MEET-status. Combineer met GBIF.
+
+  # ── GBIF — REST API (biodiversiteitsregistraties, internationaal) ──────────
+  gbif:
+    - label: GBIF Occurrence API
+      endpoint: "https://api.gbif.org/v1/occurrence/search"
+      service_type: REST
+      source_version: "GBIF v1"
+      update_cadence: continu
+      auth_required: false
+      generic: false
+      note: |
+        B11/C3 — wereldwijde biodiversiteitsregistraties; NL-data via Naturalis/NDFF.
+        Filter op country=NL, taxonKey, geometry (WKT). Paginerende JSON-API.
+        Statusbeheersing: data bevat ook meldingen van buiten Nederland. Combineer
+        met waarneming_nl voor completer beeld.
+
+  # ── NDFF — handmatig (dataverdrag vereist) ────────────────────────────────
+  ndff:
+    - label: NDFF Flora en Fauna (Nationale Database Flora en Fauna)
+      endpoint: "https://ndff.nl"
+      service_type: REST
+      source_version: "NDFF"
+      update_cadence: continu
+      auth_required: true
+      generic: false
+      warning: |
+        B11 — vereist dataverdrag met NDFF (Naturalis/Sovon/etc.). Geen publieke API.
+        HANDMATIG: exporteer data via NDFF-portaal na accordering dataverdrag.
+        Bewaar als cache/ndff/{gemeente_code}_ndff_export.csv.
+        Status: GEEN DATA tot dataverdrag beschikbaar.
