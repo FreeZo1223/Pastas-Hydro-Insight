@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "geo-stack-nl"
-version = "0.2.1"
+version = "0.3.0"
 description = "Domein-neutrale geo data-fetch laag voor Nederlandse services (PDOK, BRO, STAC)"
 requires-python = ">=3.11"
 dependencies = [
@@ -18,6 +18,7 @@ dependencies = [
     "pyyaml>=6.0",
     "httpx>=0.27",
     "pyarrow>=15.0",
+    "pydantic>=2.0",
 ]
 
 [project.optional-dependencies]

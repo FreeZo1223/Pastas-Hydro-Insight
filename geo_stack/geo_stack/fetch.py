@@ -30,6 +30,7 @@ import geopandas as gpd
 import yaml
 
 from geo_stack.core.geo_utils import BBox, validate_bbox
+from geo_stack.drivers import DRIVERS
 
 log = logging.getLogger(__name__)
 
@@ -96,33 +97,97 @@ def fetch_features(
             f"Beschikbaar: {sorted(config.get('services', {}).keys())}"
         )
 
-    cloud_native_entry = next((e for e in entries if "cloud_native_url" in e), None)
-    if prefer_cloud_native and cloud_native_entry is not None:
-        cn_fn = _CLOUD_NATIVE_DISPATCH.get(dataset)
-        if cn_fn is not None:
-            try:
-                log.info("Cloud-native fetch voor %s via %s", dataset, cn_fn.__name__)
-                return cn_fn(bbox, **kwargs)
-            except Exception as exc:
-                log.warning(
-                    "Cloud-native faalde voor %s: %s — val terug op directe fetcher",
-                    dataset, exc,
-                )
-        else:
-            log.debug(
-                "Dataset %r heeft cloud_native_url maar geen mapping in "
-                "_CLOUD_NATIVE_DISPATCH — val terug",
-                dataset,
-            )
+    # ── Legacy-dispatch (backward compat) ──────────────────────────────────
+    # Oudere tests en callers patchen _CLOUD_NATIVE_DISPATCH / _FALLBACK_DISPATCH.
+    # Als daar een mapping voor deze dataset bestaat, respecteren we die nog.
+    legacy = _try_legacy_dispatch(
+        dataset, bbox, entries, prefer_cloud_native, **kwargs
+    )
+    if legacy is not None:
+        return legacy
 
-    fallback_fn = _FALLBACK_DISPATCH.get(dataset)
-    if fallback_fn is None:
-        raise NoBackendAvailableError(
-            f"Geen fallback fetcher voor {dataset!r}. "
-            f"Mappings beschikbaar: {sorted(_FALLBACK_DISPATCH.keys())}"
-        )
-    log.info("Direct fetch voor %s via %s", dataset, fallback_fn.__name__)
-    return fallback_fn(bbox, **kwargs)
+    # ── Driver-dispatch (data_sources.yaml-gedreven) ───────────────────────
+    # Sorteer entries: cloud-native eerst als prefer_cloud_native, dan op
+    # volgorde in de yaml. Probeer per entry de bijbehorende driver; faalt er
+    # een, dan log + probeer de volgende.
+    ordered = _order_entries(entries, prefer_cloud_native)
+    errors: list[str] = []
+    for entry in ordered:
+        service_type = entry.get("service_type")
+        driver_cls = DRIVERS.get(service_type)
+        if driver_cls is None:
+            errors.append(
+                f"{entry.get('label', '?')}: geen driver voor service_type={service_type!r}"
+            )
+            continue
+        try:
+            log.info(
+                "Fetch %s via %s (%s)",
+                dataset, driver_cls.__name__, entry.get("label", "?"),
+            )
+            return driver_cls(entry).fetch(bbox, **kwargs)
+        except Exception as exc:  # noqa: BLE001 — bewust: val terug op volgende entry
+            msg = f"{entry.get('label', '?')} ({service_type}): {exc}"
+            log.warning("Driver faalde voor %s — %s; probeer volgende entry", dataset, msg)
+            errors.append(msg)
+
+    raise NoBackendAvailableError(
+        f"Geen werkende backend voor {dataset!r}. Geprobeerd:\n  "
+        + "\n  ".join(errors)
+    )
+
+
+def _order_entries(entries: list[dict], prefer_cloud_native: bool) -> list[dict]:
+    """Sorteer entries; zet CLOUD_NATIVE vooraan als ``prefer_cloud_native``.
+
+    Drivers zonder mapping in ``DRIVERS`` blijven in de lijst maar worden
+    tijdens dispatch overgeslagen (met een nette foutmelding).
+    """
+    if not prefer_cloud_native:
+        return [e for e in entries if e.get("service_type") != "CLOUD_NATIVE"] + [
+            e for e in entries if e.get("service_type") == "CLOUD_NATIVE"
+        ]
+    cloud = [e for e in entries if e.get("service_type") == "CLOUD_NATIVE"]
+    rest = [e for e in entries if e.get("service_type") != "CLOUD_NATIVE"]
+    return cloud + rest
+
+
+def _try_legacy_dispatch(
+    dataset: str,
+    bbox: BBox,
+    entries: list[dict],
+    prefer_cloud_native: bool,
+    **kwargs: Any,
+) -> gpd.GeoDataFrame | None:
+    """Respecteer handmatig gepatchte legacy-dispatch-dicts (backward compat).
+
+    Returnt ``None`` als er geen legacy-mapping is, zodat de driver-dispatch
+    het overneemt. Gooit ``NoBackendAvailableError`` als een legacy cloud-native
+    faalt én er geen legacy-fallback is (oud gedrag van de tests).
+    """
+    has_cn_url = any("cloud_native_url" in e for e in entries)
+    cn_fn = _CLOUD_NATIVE_DISPATCH.get(dataset)
+    fb_fn = _FALLBACK_DISPATCH.get(dataset)
+
+    if cn_fn is None and fb_fn is None:
+        return None  # geen legacy-mapping → moderne driver-dispatch
+
+    if prefer_cloud_native and has_cn_url and cn_fn is not None:
+        try:
+            log.info("Legacy cloud-native fetch voor %s via %s", dataset, cn_fn.__name__)
+            return cn_fn(bbox, **kwargs)
+        except Exception as exc:
+            log.warning("Legacy cloud-native faalde voor %s: %s", dataset, exc)
+            if fb_fn is None:
+                raise NoBackendAvailableError(
+                    f"Cloud-native faalde voor {dataset!r} en geen fallback."
+                ) from exc
+
+    if fb_fn is not None:
+        log.info("Legacy direct fetch voor %s via %s", dataset, fb_fn.__name__)
+        return fb_fn(bbox, **kwargs)
+
+    return None
 
 
 def _load_data_sources(path: Path | str | None) -> dict[str, Any]:
@@ -169,20 +234,29 @@ _FALLBACK_DISPATCH: dict[str, Callable[..., gpd.GeoDataFrame]] = {
 }
 
 
-def list_datasets(data_sources_yaml: Path | str | None = None) -> dict[str, dict[str, bool]]:
+def list_datasets(data_sources_yaml: Path | str | None = None) -> dict[str, dict]:
     """Toon per dataset welke backends beschikbaar zijn.
 
     Returns
     -------
     dict
-        ``{dataset: {"cloud_native": bool, "fallback": bool}}``.
+        ``{dataset: {"cloud_native": bool, "fallback": bool, "driver": str|None}}``.
+        ``driver`` is de service_type-string waarvoor een driver-klasse bestaat,
+        of ``None`` als alleen legacy-dispatch of geen backend beschikbaar is.
     """
     config = _load_data_sources(data_sources_yaml)
-    out: dict[str, dict[str, bool]] = {}
+    out: dict[str, dict] = {}
     for dataset, entries in config.get("services", {}).items():
         has_cn_url = any("cloud_native_url" in e for e in entries)
+        service_types = [e.get("service_type") for e in entries]
+        driver_type = next((st for st in service_types if st in DRIVERS), None)
         out[dataset] = {
-            "cloud_native": has_cn_url and dataset in _CLOUD_NATIVE_DISPATCH,
-            "fallback": dataset in _FALLBACK_DISPATCH,
+            "cloud_native": has_cn_url and (
+                dataset in _CLOUD_NATIVE_DISPATCH or "CLOUD_NATIVE" in service_types
+            ),
+            "fallback": dataset in _FALLBACK_DISPATCH or any(
+                st in DRIVERS for st in service_types if st != "CLOUD_NATIVE"
+            ),
+            "driver": driver_type,
         }
     return out

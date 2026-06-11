@@ -15,27 +15,28 @@
 services:
 
   # ── BGT ────────────────────────────────────────────────────────────────────
+  # Oude WFS-endpoint (service.pdok.nl/lv/bgt/wfs/v1_0) is per 2025 offline.
+  # Gebruik OGC API Features: api.pdok.nl/lv/bgt/ogc/v1_0
   bgt:
-    - label: BGT WFS
-      endpoint: "https://service.pdok.nl/lv/bgt/wfs/v1_0"
-      service_type: WFS
+    - label: BGT OGC API Features (PDOK)
+      endpoint: "https://api.pdok.nl/lv/bgt/ogc/v1_0"
+      service_type: OGC_API
       source_version: "BGT 2025-Q1"
       update_cadence: dagelijks
-      cql_filter: true
       default_crs: "EPSG:28992"
       feature_types:
-        - bgt:begroeidterreindeel
-        - bgt:onbegroeidterreindeel
-        - bgt:ondersteunendwaterdeel
-        - bgt:ondersteunendwegdeel
-        - bgt:overbruggingsdeel
-        - bgt:overigbouwwerk
-        - bgt:pand
-        - bgt:scheiding
-        - bgt:tunneldeel
-        - bgt:vegetatieobject
-        - bgt:waterdeel
-        - bgt:wegdeel
+        - pand
+        - wegdeel
+        - begroeidterreindeel
+        - onbegroeidterreindeel
+        - waterdeel
+        - ondersteunendwaterdeel
+        - ondersteunendwegdeel
+        - overbruggingsdeel
+        - scheiding_vlak
+        - overigbouwwerk
+        - spoor
+        - kunstwerkdeel_vlak
 
   # ── AHN ────────────────────────────────────────────────────────────────────
   ahn:
@@ -112,6 +113,7 @@ services:
     - label: BRO Geomorfologische kaart WFS
       endpoint: "https://service.pdok.nl/bzk/basisregistratieondergrond/wfs/v1_0"
       service_type: WFS
+      typename: "bro_geomorfologie:geomorfologische_eenheid"
       source_version: "BRO Geomorfologische kaart"
       update_cadence: onregelmatig
       cql_filter: true
@@ -149,6 +151,7 @@ services:
     - label: Natura 2000 WFS (RVO)
       endpoint: "https://service.pdok.nl/rvo/natura2000/wfs/v1_0"
       service_type: WFS
+      typename: "natura2000:natura2000gebied"
       source_version: "Natura 2000 NL 2024"
       update_cadence: onregelmatig
       cql_filter: true
@@ -159,6 +162,7 @@ services:
     - label: BRP Gewaspercelen 2024 WFS
       endpoint: "https://service.pdok.nl/rvo/brpgewaspercelen/wfs/v1_0"
       service_type: WFS
+      typename: "brpgewaspercelen:gewasperceel"
       source_version: "BRP 2024"
       update_cadence: jaarlijks
       cql_filter: true
