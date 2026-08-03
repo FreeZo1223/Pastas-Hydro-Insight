@@ -1,0 +1,42 @@
+# ── Secrets / lokale config ─────────────────────────────────
+.env
+.env.local
+*.pem
+*.key
+
+# ── Editor / agent caches ───────────────────────────────────
+/.cache/
+/.claude/
+
+# ── Python ──────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# ── uv / venv (lockfile WEL committen voor reproduceerbaarheid) ──
+.venv/
+.venvs/
+
+# ── Jupyter ─────────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── IDE ─────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+
+# ── OS ──────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Sessies / caches (per gebruiker, niet delen) ─────────────
+sessions/
+**/data/cache/
+*.tmp
+*.bak

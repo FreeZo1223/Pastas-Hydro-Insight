@@ -1,0 +1,24 @@
+[tool.uv.workspace]
+members = [
+    "PASTAS/pastas_adapter",
+    "PASTAS/pastasdash",
+    "PASTAS/pastasdash_v2",
+]
+
+[tool.uv.sources]
+pastas-adapter = { workspace = true }
+pastasdash     = { workspace = true }
+pastasdash_v2  = { workspace = true }
+
+[tool.uv]
+prerelease = "allow"
+dev-dependencies = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+]
+
+[tool.pytest.ini_options]
+markers = [
+    "unit: unit tests (geen netwerk)",
+    "integration: integration tests (netwerk vereist)",
+]
