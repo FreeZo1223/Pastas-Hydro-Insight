@@ -111,10 +111,14 @@ Opnieuw beginnen met een schone lei: verwijder de map `~/.pastasdash_v2`.
 
 ## Ontwikkelen
 
+Pytest en ruff zitten in de `dev`-extra, die niet standaard meekomt — vandaar
+`--extra dev`:
+
 ```powershell
-uv run python -m pytest tests/ -q
-uv run ruff check pastasdash_v2/
+uv run --extra dev python -m pytest tests/ -q
+uv run --extra dev ruff check pastasdash_v2/
 ```
 
-> Op sommige werkplekken blokkeert de virusscanner `uv run pytest`. Gebruik dan
-> `uv run python -m pytest`, dat werkt wel.
+> Op sommige werkplekken blokkeert de virusscanner `uv run pytest` met
+> `Failed to spawn: Toegang geweigerd`. Gebruik dan `python -m pytest`, zoals
+> hierboven — dat werkt wel.

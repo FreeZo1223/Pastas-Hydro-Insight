@@ -6,13 +6,17 @@ kunnen klonen en draaien zonder GitHub-account. Houd dat zo: elke nieuwe
 dependency moet op PyPI staan.
 
 ```powershell
-uv run pastasdash-v2              # start op http://127.0.0.1:8051
-uv run python -m pytest tests/ -q
-uv run ruff check pastasdash_v2/
+uv run pastasdash-v2                          # start op http://127.0.0.1:8051
+uv run --extra dev python -m pytest tests/ -q
+uv run --extra dev ruff check pastasdash_v2/
 ```
 
+`--extra dev` is nodig: pytest en ruff zitten niet in de standaardset (die is
+bewust minimaal voor collega's die alleen willen draaien). Zonder de extra
+krijg je `No module named pytest`.
+
 `uv run pytest` faalt op sommige werkplekken op de virusscanner
-(`Failed to spawn: Toegang geweigerd`); `uv run python -m pytest` werkt wel.
+(`Failed to spawn: Toegang geweigerd`); `python -m pytest` werkt wel.
 
 ## Motor en schil
 
