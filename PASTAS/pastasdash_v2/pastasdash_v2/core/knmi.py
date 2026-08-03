@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from pastasdash_v2.config import KNMI_CACHE_DIR
+from pastasdash_v2.core.config import KNMI_CACHE_DIR
 
 log = logging.getLogger(__name__)
 

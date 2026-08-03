@@ -15,19 +15,22 @@ import numpy as np
 import pandas as pd
 from nicegui import ui
 
-from pastasdash_v2.components.header import render_header
-from pastasdash_v2.components.plots import (
-    clean_fig, empty_figure, foe_figure, regime_curve_figure, timeseries_overlay,
+from pastasdash_v2.core.statistics import average_foe, gw_stats
+from pastasdash_v2.core.store import STORE
+from pastasdash_v2.core.timeseries import get_oseries
+from pastasdash_v2.ui.components.plots import (
+    clean_fig,
+    empty_figure,
+    foe_figure,
+    regime_curve_figure,
+    timeseries_overlay,
 )
-from pastasdash_v2.compute.statistics import average_foe, gw_stats
-from pastasdash_v2.compute.timeseries import get_oseries
-from pastasdash_v2.state.store import STORE
+from pastasdash_v2.ui.shell import geselecteerd, pagina
 
 log = logging.getLogger(__name__)
 
 
-def render() -> None:
-    render_header(active_tab="statistics")
+def _inhoud() -> None:
     with ui.column().classes("w-full p-4 gap-4"):
         if not STORE.is_loaded:
             _render_empty_state()
@@ -45,9 +48,12 @@ def _render_empty_state() -> None:
 
 def _render_content() -> None:
     ui_state = STORE.ui_state
-    selected: list[str] = ui_state.get("statistics.selected", []) or []
     show_avg_foe: bool = ui_state.get("statistics.show_avg_foe", True)
     relative_to_surface: bool = ui_state.get("statistics.rel_to_surface", False)
+
+    # De peilbuiskeuze komt uit de zijbalk en geldt voor álle weergaven. De
+    # tabel hieronder is dus een afleesvenster, geen tweede keuzelijst.
+    selected = geselecteerd()
 
     df = STORE.oseries()
     all_names = list(df.index)
@@ -56,26 +62,32 @@ def _render_content() -> None:
     stats_rows = [_stats_row(name) for name in all_names]
 
     with ui.row().classes("w-full gap-4 items-stretch"):
-        # ── Linkerkolom: selectie + statistieken-tabel ────────────────────
+        # ── Linkerkolom: statistieken-tabel ───────────────────────────────
         with ui.column().classes("flex-1 min-w-0 gap-2"):
-            ui.label("Time series + statistieken").classes("text-lg font-medium")
-            ui.label("Selecteer peilbuizen om te tonen in de grafieken rechts.").classes(
-                "text-xs opacity-70"
-            )
+            ui.label("Grondwaterstatistiek").classes("peil-label")
+            ui.label(
+                "GxG en grondwatertrap per peilbuis. De grafieken rechts volgen "
+                "je selectie links."
+            ).classes("text-xs").style("color: var(--peil-slate)")
 
             cols = [
                 {"name": "name", "label": "Naam",   "field": "name", "align": "left", "sortable": True},
                 {"name": "gt",   "label": "GT",     "field": "gt",   "align": "center", "sortable": True},
-                {"name": "mlgl", "label": "MLGL",   "field": "mlgl", "sortable": True},
-                {"name": "mg",   "label": "MG",     "field": "mg",   "sortable": True},
-                {"name": "msgl", "label": "MSGL",   "field": "msgl", "sortable": True},
-                {"name": "mhgl", "label": "MHGL",   "field": "mhgl", "sortable": True},
-                {"name": "sl",   "label": "surf.l.","field": "sl",   "sortable": True},
+                {"name": "mlgl", "label": "GLG",    "field": "mlgl", "sortable": True},
+                {"name": "mg",   "label": "Gem.",   "field": "mg",   "sortable": True},
+                {"name": "msgl", "label": "GVG",    "field": "msgl", "sortable": True},
+                {"name": "mhgl", "label": "GHG",    "field": "mhgl", "sortable": True},
+                {"name": "sl",   "label": "Maaiveld", "field": "sl", "sortable": True},
             ]
-            table = ui.table(
-                columns=cols, rows=stats_rows, row_key="name", selection="multiple",
-            ).classes("w-full")
-            table.selected = [{"name": n} for n in selected if n in all_names]
+            ui.table(columns=cols, rows=stats_rows, row_key="name").classes(
+                "w-full peil-num"
+            ).props("flat dense")
+
+            if all(r.get("gt") in ("?", None) for r in stats_rows):
+                ui.label(
+                    "Grondwatertrap ontbreekt: deze dataset bevat geen "
+                    "maaiveldhoogte bij de peilbuizen."
+                ).classes("text-xs").style("color: var(--peil-low)")
 
             with ui.row().classes("gap-3 items-center mt-2"):
                 avg_toggle = ui.switch("Gemiddelde FOE-curve tonen", value=show_avg_foe)
@@ -106,15 +118,16 @@ def _render_content() -> None:
         return out
 
     def _redraw() -> None:
-        names = [r["name"] for r in table.selected]
-        series = _series_for(names)
-        ylabel = "Groundwater level (m onder mv)" if rel_toggle.value else "Groundwater level (m NAP)"
+        series = _series_for(selected)
+        ylabel = "Grondwaterstand (m onder maaiveld)" if rel_toggle.value else "Grondwaterstand (m NAP)"
 
         # Hydrograph
         hydrograph_holder.clear()
         with hydrograph_holder:
             if not series:
-                ui.plotly(clean_fig(empty_figure("Selecteer peilbuizen in de tabel."))).classes("w-full")
+                ui.plotly(
+                    clean_fig(empty_figure("Selecteer links een of meer peilbuizen."))
+                ).classes("w-full")
             else:
                 fig = timeseries_overlay(series, title="Groundwater Hydrograph", height=380)
                 fig.update_yaxes(title_text=ylabel, autorange=("reversed" if rel_toggle.value else True))
@@ -135,11 +148,6 @@ def _render_content() -> None:
             fig.update_yaxes(title_text=ylabel, autorange=("reversed" if rel_toggle.value else True))
             ui.plotly(clean_fig(fig)).classes("w-full")
 
-    def _on_select() -> None:
-        names = [r["name"] for r in table.selected]
-        ui_state.set("statistics.selected", names)
-        _redraw()
-
     def _on_avg_toggle() -> None:
         ui_state.set("statistics.show_avg_foe", avg_toggle.value)
         _redraw()
@@ -148,7 +156,6 @@ def _render_content() -> None:
         ui_state.set("statistics.rel_to_surface", rel_toggle.value)
         _redraw()
 
-    table.on("selection", _on_select)
     avg_toggle.on_value_change(_on_avg_toggle)
     rel_toggle.on_value_change(_on_rel_toggle)
 
@@ -190,3 +197,9 @@ def _surface_level_of(name: str) -> float:
     except Exception:  # noqa: BLE001
         pass
     return float("nan")
+
+
+def render() -> None:
+    """Weergave binnen de vaste omlijsting (kop + peilbuizenlijst)."""
+    with pagina("statistics"):
+        _inhoud()

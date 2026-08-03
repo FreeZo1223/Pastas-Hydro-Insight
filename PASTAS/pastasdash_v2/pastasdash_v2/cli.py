@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 
 from pastasdash_v2 import __version__
-from pastasdash_v2.config import DEFAULT_PORT
+from pastasdash_v2.core.config import DEFAULT_PORT
 from pastasdash_v2.main import run
 
 

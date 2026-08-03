@@ -8,9 +8,22 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from pastasdash_v2.config import BRAND_COLOR
+from pastasdash_v2.core.config import BRAND_COLOR
 
 log = logging.getLogger(__name__)
+
+
+def map_trace_cls() -> tuple[type, str]:
+    """Geef de kaart-trace en het layout-voorvoegsel van de actieve plotly.
+
+    Plotly 6 verving de Mapbox-kaarten door MapLibre: ``Scattermapbox`` werd
+    ``Scattermap`` en de layoutsleutels ``mapbox_*`` werden ``map_*``. Door dit
+    op één plek te bepalen werkt het dashboard op beide generaties en staat de
+    versiekeuze niet verspreid door de code.
+    """
+    if hasattr(go, "Scattermap"):
+        return go.Scattermap, "map"
+    return go.Scattermapbox, "mapbox"
 
 
 def empty_figure(message: str = "Geen data") -> go.Figure:
@@ -73,29 +86,39 @@ def timeseries_stacked(
 def map_oseries(
     df: pd.DataFrame, selected: list[str] | None = None, height: int = 520
 ) -> go.Figure:
-    """Plotly mapbox kaart met alle oseries; selectie wordt accent-gekleurd."""
+    """Kaart met alle peilbuizen; de selectie krijgt de accentkleur.
+
+    Plotly 6 heeft de Mapbox-traces vervangen door MapLibre (``Scattermap``
+    in plaats van ``Scattermapbox``, en ``map_*``- in plaats van
+    ``mapbox_*``-layoutsleutels). We kiezen daarom op basis van wat de
+    geïnstalleerde plotly aanbiedt, zodat zowel oudere als nieuwe versies
+    werken.
+    """
     if df.empty or "lat" not in df.columns or df["lat"].isna().all():
         return empty_figure("Geen locatiegegevens beschikbaar")
 
     selected = set(selected or [])
-    colors = [BRAND_COLOR if n not in selected else "#f7a31c" for n in df.index]
-    sizes = [12 if n in selected else 8 for n in df.index]
+    colors = [BRAND_COLOR if n not in selected else "#C2703D" for n in df.index]
+    sizes = [13 if n in selected else 8 for n in df.index]
+
+    trace_cls, sleutel = map_trace_cls()
 
     fig = go.Figure()
     fig.add_trace(
-        go.Scattermapbox(
+        trace_cls(
             lat=df["lat"], lon=df["lon"],
             text=df.index, mode="markers",
             marker=dict(size=sizes, color=colors),
-            hovertemplate="<b>%{text}</b><br>lat=%{lat:.4f}<br>lon=%{lon:.4f}<extra></extra>",
+            hovertemplate="<b>%{text}</b><br>%{lat:.4f}, %{lon:.4f}<extra></extra>",
         )
     )
-    center_lat = float(df["lat"].mean())
-    center_lon = float(df["lon"].mean())
+    center = dict(lat=float(df["lat"].mean()), lon=float(df["lon"].mean()))
     fig.update_layout(
-        mapbox_style="open-street-map",
-        mapbox_center=dict(lat=center_lat, lon=center_lon),
-        mapbox_zoom=8,
+        **{
+            f"{sleutel}_style": "open-street-map",
+            f"{sleutel}_center": center,
+            f"{sleutel}_zoom": 8,
+        },
         margin=dict(l=0, r=0, t=0, b=0), height=height,
         clickmode="event+select",
     )
@@ -206,7 +229,7 @@ def foe_figure(
 
     ``average``: optionele DataFrame met kolommen 'foe' en 'value' (gemiddelde curve).
     """
-    from pastasdash_v2.compute.statistics import frequency_of_exceedance
+    from pastasdash_v2.core.statistics import frequency_of_exceedance
 
     fig = go.Figure()
     if not series_dict and (average is None or average.empty):
@@ -244,7 +267,7 @@ def regime_curve_figure(
     series_dict: dict[str, pd.Series], height: int = 360
 ) -> go.Figure:
     """Gemiddelde grondwaterstand per maand voor elke peilbuis."""
-    from pastasdash_v2.compute.statistics import regime_curve
+    from pastasdash_v2.core.statistics import regime_curve
 
     fig = go.Figure()
     if not series_dict:

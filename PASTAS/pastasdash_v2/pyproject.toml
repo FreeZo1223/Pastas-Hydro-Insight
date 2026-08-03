@@ -4,10 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pastasdash_v2"
-version = "2.1.0"
-description = "NiceGUI-based dashboard voor PASTAS grondwateranalyse met persistente caching."
+version = "2.2.0"
+description = "Grondwaterdashboard voor PASTAS — tijdreeksen, modellen en GxG-statistiek in de browser."
 readme = "README.md"
-requires-python = ">=3.11"
+# Bovengrens bewust: niet elke wetenschappelijke afhankelijkheid heeft al
+# wheels voor 3.14, en zonder grens kiest uv de nieuwste Python op de machine.
+# Samen met .python-version krijgt iedere collega dezelfde omgeving.
+requires-python = ">=3.11,<3.14"
 authors = [{ name = "Friso Schutten" }]
 dependencies = [
     "nicegui>=2.0",
@@ -20,25 +23,28 @@ dependencies = [
     "diskcache>=5.6",
     "hydropandas>=0.14",
     "pyarrow>=15.0",
-    "geopandas>=1.0",
-    "geo-stack-nl",
-    "pastas-adapter",
-    "lesa-agent",
 ]
 
+# Let op: lesa_agent staat hier bewust NIET bij, ook niet als optionele extra.
+# Die package zit in een privé-repo en is niet op PyPI; als extra zou hij de
+# hele lockfile onoplosbaar maken en dus ook installatie zonder BRO-gebruik
+# blokkeren. Alles hierboven komt van PyPI, zodat installeren geen GitHub-
+# account vereist. Wie ruwe BRO Loket-exports wil inlezen installeert
+# lesa_agent er handmatig bij; het dashboard vraagt er zelf om wanneer nodig.
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.4"]
 
 [project.scripts]
 pastasdash-v2 = "pastasdash_v2.cli:main"
 
-[tool.uv.sources]
-geo-stack-nl    = { git = "https://github.com/FreeZo1223/geo_stack" }
-pastas-adapter  = { path = "../pastas_adapter", editable = true }
-lesa-agent      = { git = "https://github.com/FreeZo1223/lesa-agent-v2", subdirectory = "packages/lesa_agent" }
-
 [tool.hatch.build.targets.wheel]
 packages = ["pastasdash_v2"]
+
+[tool.pytest.ini_options]
+markers = [
+    "unit: unit tests (geen netwerk)",
+    "integration: integration tests (netwerk vereist)",
+]
 
 [tool.ruff]
 line-length = 100

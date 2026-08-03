@@ -4,20 +4,18 @@ from __future__ import annotations
 
 import logging
 
-import pandas as pd
 import plotly.graph_objects as go
 from nicegui import ui
 
-from pastasdash_v2.components.header import render_header
-from pastasdash_v2.components.plots import clean_fig, empty_figure
-from pastasdash_v2.compute.timeseries import model_summary
-from pastasdash_v2.state.store import STORE
+from pastasdash_v2.core.store import STORE
+from pastasdash_v2.core.timeseries import model_summary
+from pastasdash_v2.ui.components.plots import clean_fig, empty_figure
+from pastasdash_v2.ui.shell import pagina
 
 log = logging.getLogger(__name__)
 
 
-def render() -> None:
-    render_header(active_tab="compare")
+def _inhoud() -> None:
     if not STORE.is_loaded:
         with ui.card().classes("w-full max-w-xl mx-auto mt-8"):
             ui.label("Laad eerst een PastaStore op de Start-pagina.").classes("text-lg")
@@ -104,3 +102,9 @@ def render() -> None:
 
         select.on_value_change(lambda _e: _redraw())
         _redraw()
+
+
+def render() -> None:
+    """Weergave binnen de vaste omlijsting (kop + peilbuizenlijst)."""
+    with pagina("compare"):
+        _inhoud()

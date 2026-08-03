@@ -17,7 +17,7 @@ from typing import Any, Callable, TypeVar
 
 import diskcache
 
-from pastasdash_v2.config import COMPUTE_CACHE_DIR
+from pastasdash_v2.core.config import COMPUTE_CACHE_DIR
 
 log = logging.getLogger(__name__)
 

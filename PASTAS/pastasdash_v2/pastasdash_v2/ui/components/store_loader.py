@@ -7,9 +7,9 @@ from pathlib import Path
 
 from nicegui import events, ui
 
-from pastasdash_v2.state.persistence import AppState
-from pastasdash_v2.state.store import STORE
-from pastasdash_v2.tasks import run_in_thread
+from pastasdash_v2.core.persistence import AppState
+from pastasdash_v2.core.store import STORE
+from pastasdash_v2.ui.tasks import run_in_thread
 
 log = logging.getLogger(__name__)
 

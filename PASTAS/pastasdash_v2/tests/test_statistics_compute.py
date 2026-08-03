@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from pastasdash_v2.compute.statistics import (
+from pastasdash_v2.core.statistics import (
     average_foe, classify_gt, frequency_of_exceedance, regime_curve,
 )
 

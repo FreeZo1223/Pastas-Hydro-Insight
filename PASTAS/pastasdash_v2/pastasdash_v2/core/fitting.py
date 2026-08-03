@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING
 
 import pandas as pd
 
-from pastasdash_v2.state.cache import invalidate_store
-from pastasdash_v2.state.store import STORE
+from pastasdash_v2.core.cache import invalidate_store
+from pastasdash_v2.core.store import STORE
 
 if TYPE_CHECKING:
     import pastas as ps

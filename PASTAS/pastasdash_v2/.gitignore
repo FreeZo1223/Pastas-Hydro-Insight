@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Omgeving — uv bouwt deze zelf uit pyproject.toml + uv.lock
+.venv/
+
+# uv.lock committen we WEL: daarmee krijgt iedere collega dezelfde versies.
+
+# Data hoort niet in de repo; wijs het dashboard naar een pad op schijf.
+*.pastastore
+*.zip
+*.parquet
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

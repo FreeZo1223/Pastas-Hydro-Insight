@@ -6,11 +6,17 @@ import logging
 
 from nicegui import app, ui
 
-from pastasdash_v2.config import APP_NAME, BRAND_COLOR, DEFAULT_PORT
-from pastasdash_v2.pages import (
-    compare, droogte, home, maps, model, overview, statistics,
+from pastasdash_v2.core.config import APP_NAME, BRAND_COLOR, DEFAULT_PORT
+from pastasdash_v2.core.store import restore_last_store
+from pastasdash_v2.ui.pages import (
+    compare,
+    droogte,
+    home,
+    maps,
+    model,
+    overview,
+    statistics,
 )
-from pastasdash_v2.state.store import restore_last_store
 
 log = logging.getLogger(__name__)
 
@@ -54,8 +60,12 @@ def run(host: str = "127.0.0.1", port: int = DEFAULT_PORT, reload: bool = False)
     def page_statistics() -> None:
         statistics.render()
 
+    # ui.colors() mag niet vóór ui.run() worden aangeroepen: dat zet NiceGUI's
+    # script_mode aan en laat ui.run() vervolgens crashen op de @ui.page-routes
+    # hierboven. Per pagina zet apply_theme() de kleuren nogmaals; deze regel
+    # dekt de korte periode vóór de eerste render.
     app.on_startup(lambda: ui.colors(primary=BRAND_COLOR))
     ui.run(
-        host=host, port=port, title="PastasDash v2",
+        host=host, port=port, title="PastasDash",
         reload=reload, show=False, storage_secret=APP_NAME,
     )

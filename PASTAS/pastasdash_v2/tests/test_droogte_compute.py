@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from pastasdash_v2.compute import droogte as d
+from pastasdash_v2.core import droogte as d
 
 
 def _synthetic_pe(n_years: int = 5) -> tuple[pd.Series, pd.Series]:

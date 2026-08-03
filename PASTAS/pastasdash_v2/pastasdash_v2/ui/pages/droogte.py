@@ -7,13 +7,13 @@ from datetime import date
 
 from nicegui import ui
 
-from pastasdash_v2.components.header import render_header
-from pastasdash_v2.components.plots import clean_fig, empty_figure, droogte_figure
-from pastasdash_v2.compute import droogte as droogte_compute
-from pastasdash_v2.compute.knmi import fetch_knmi_daily
-from pastasdash_v2.compute.stations import DEFAULT_STATION_CODE, STATIONS_BY_CODE, station_label_map
-from pastasdash_v2.state.persistence import AppState
-from pastasdash_v2.tasks import run_in_thread
+from pastasdash_v2.core import droogte as droogte_compute
+from pastasdash_v2.core.knmi import fetch_knmi_daily
+from pastasdash_v2.core.persistence import AppState
+from pastasdash_v2.core.stations import DEFAULT_STATION_CODE, STATIONS_BY_CODE, station_label_map
+from pastasdash_v2.ui.components.plots import clean_fig, droogte_figure, empty_figure
+from pastasdash_v2.ui.shell import pagina
+from pastasdash_v2.ui.tasks import run_in_thread
 
 log = logging.getLogger(__name__)
 
@@ -22,8 +22,7 @@ _DEFAULT_REF_END = 2020
 _DEFAULT_CMP_YEARS: list[int] = [2018, 2020, 2024]
 
 
-def render() -> None:
-    render_header(active_tab="droogte")
+def _inhoud() -> None:
 
     # Persistente UI-state — gebruikt AppState (niet per-store) want droogte
     # is store-onafhankelijk
@@ -117,3 +116,9 @@ def render() -> None:
         if AppState.get("droogte.last_run"):
             ui.timer(0.2, _compute_and_plot, once=True)
         AppState.set("droogte.last_run", date.today().isoformat())
+
+
+def render() -> None:
+    """Weergave binnen de vaste omlijsting (kop + peilbuizenlijst)."""
+    with pagina("droogte"):
+        _inhoud()

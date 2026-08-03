@@ -2,7 +2,7 @@
 
 Gebruik:
 
-    from pastasdash_v2.tasks import run_task
+    from pastasdash_v2.ui.tasks import run_task
 
     async def fit_button_handler():
         async with run_task("Model fitten: GMW123_1"):

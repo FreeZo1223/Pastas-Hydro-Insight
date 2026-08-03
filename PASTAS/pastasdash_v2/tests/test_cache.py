@@ -5,7 +5,7 @@ from __future__ import annotations
 import diskcache
 import pytest
 
-from pastasdash_v2.state import cache as c
+from pastasdash_v2.core import cache as c
 
 
 @pytest.fixture(autouse=True)

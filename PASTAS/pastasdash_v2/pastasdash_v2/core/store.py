@@ -18,8 +18,8 @@ import pandas as pd
 import pastastore as pst
 import pyproj
 
-from pastasdash_v2.config import CRS_RD, CRS_WGS84, DEFAULT_COLUMNS, ColumnMapping
-from pastasdash_v2.state.persistence import AppState, UIState
+from pastasdash_v2.core.config import CRS_RD, CRS_WGS84, DEFAULT_COLUMNS, ColumnMapping
+from pastasdash_v2.core.persistence import AppState, UIState
 
 log = logging.getLogger(__name__)
 
@@ -41,6 +41,39 @@ def _looks_like_bro_loket_dir(path: Path) -> bool:
         return any(path.rglob("GMW*.xml"))
     except Exception:  # noqa: BLE001
         return False
+
+
+def _find_pas_descriptor(path: Path) -> Path | None:
+    """Vind de ``.pastastore``-descriptor van een native PasConnector-store.
+
+    Zo'n store is geen ZIP maar een map ``<basis>/<naam>/`` met daarin
+    ``<naam>.pastastore`` (JSON) plus de mappen ``oseries``, ``stresses``
+    en ``models``. Dit is wat ``pastastore`` zelf op schijf schrijft, dus
+    zowel het descriptor-bestand als de map eromheen moet werken.
+    """
+    if path.is_file() and path.suffix.lower() == ".pastastore":
+        return path
+    if path.is_dir():
+        direct = path / f"{path.name}.pastastore"
+        if direct.exists():
+            return direct
+        matches = sorted(path.glob("*.pastastore"))
+        if matches:
+            return matches[0]
+    return None
+
+
+def _build_pastastore_from_pas(descriptor: Path) -> pst.PastaStore:
+    """Open een PasConnector-store op basis van zijn descriptor.
+
+    Let op: het ``path``-veld *in* de JSON wordt genegeerd. Dat bevat het
+    pad van de machine waarop de store ooit gemaakt is en klopt na verplaatsen
+    of hernoemen niet meer; de locatie op schijf is de betrouwbare bron.
+    """
+    store_dir = descriptor.parent
+    name = descriptor.stem
+    conn = pst.PasConnector(name=name, path=str(store_dir.parent))
+    return pst.PastaStore(conn)
 
 
 def _store_key(path: Path) -> str:
@@ -107,9 +140,22 @@ class StoreManager:
         if not p.exists():
             raise FileNotFoundError(f"Pad bestaat niet: {p}")
 
+        # Native PasConnector-store (map of .pastastore-descriptor) gaat voor:
+        # die herken je hard aan de descriptor, terwijl de BRO-checks heuristisch zijn.
+        descriptor = _find_pas_descriptor(p)
+        if descriptor is not None:
+            log.info("Native PasConnector-store gedetecteerd: %s", descriptor)
+            store = _build_pastastore_from_pas(descriptor)
+            # Sleutel op de store-map, zodat het descriptor-bestand en de map
+            # eromheen dezelfde cache- en UI-state delen.
+            self._set_store(store, descriptor.parent)
+            return
+
         if p.is_dir():
             if not _looks_like_bro_loket_dir(p):
-                raise ValueError(f"Map bevat geen BRO Loket-export: {p}")
+                raise ValueError(
+                    f"Map is geen BRO Loket-export en geen PastaStore: {p}"
+                )
             log.info("BRO Loket-map gedetecteerd: %s", p)
             store = _build_pastastore_from_bro(p)
         elif _looks_like_bro_loket_zip(p):

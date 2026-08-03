@@ -3,24 +3,25 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import asdict
 
 from nicegui import ui
 
-from pastasdash_v2.components.header import render_header
-from pastasdash_v2.components.plots import (
-    clean_fig, empty_figure, model_diagnostics_figure, model_results_figure,
+from pastasdash_v2.core.fitting import FitOptions, fit_model
+from pastasdash_v2.core.store import STORE
+from pastasdash_v2.core.timeseries import model_summary
+from pastasdash_v2.ui.components.plots import (
+    clean_fig,
+    empty_figure,
+    model_diagnostics_figure,
+    model_results_figure,
 )
-from pastasdash_v2.compute.fitting import FitOptions, fit_model
-from pastasdash_v2.compute.timeseries import model_summary
-from pastasdash_v2.state.store import STORE
-from pastasdash_v2.tasks import run_in_thread
+from pastasdash_v2.ui.shell import geselecteerd, pagina
+from pastasdash_v2.ui.tasks import run_in_thread
 
 log = logging.getLogger(__name__)
 
 
-def render() -> None:
-    render_header(active_tab="model")
+def _inhoud() -> None:
     if not STORE.is_loaded:
         _empty()
         return
@@ -28,8 +29,16 @@ def render() -> None:
     ui_state = STORE.ui_state
     oseries_names = STORE.oseries_names()
     model_names = STORE.model_names()
-    last_selected = ui_state.get("model.selected") or (model_names[0] if model_names else None) or (
-        oseries_names[0] if oseries_names else None
+
+    # Deze weergave toont één model tegelijk, dus hier is een keuzelijst op zijn
+    # plaats. Wel beginnen we bij wat er links geselecteerd staat: anders kies
+    # je een peilbuis in de zijbalk en kijk je hier naar een andere.
+    uit_zijbalk = geselecteerd()
+    last_selected = (
+        (uit_zijbalk[0] if uit_zijbalk else None)
+        or ui_state.get("model.selected")
+        or (model_names[0] if model_names else None)
+        or (oseries_names[0] if oseries_names else None)
     )
 
     with ui.column().classes("w-full p-4 gap-4"):
@@ -148,3 +157,9 @@ def _empty() -> None:
     with ui.card().classes("w-full max-w-xl mx-auto mt-8"):
         ui.label("Laad eerst een PastaStore op de Start-pagina.").classes("text-lg")
         ui.link("→ Start", target="/").classes("text-blue-600")
+
+
+def render() -> None:
+    """Weergave binnen de vaste omlijsting (kop + peilbuizenlijst)."""
+    with pagina("model"):
+        _inhoud()

@@ -9,11 +9,11 @@ import pandas as pd
 import plotly.graph_objects as go
 from nicegui import ui
 
-from pastasdash_v2.components.header import render_header
-from pastasdash_v2.components.plots import clean_fig, empty_figure
-from pastasdash_v2.compute.timeseries import gxg, model_summary
-from pastasdash_v2.state.store import STORE
-from pastasdash_v2.tasks import run_in_thread
+from pastasdash_v2.core.store import STORE
+from pastasdash_v2.core.timeseries import gxg, model_summary
+from pastasdash_v2.ui.components.plots import clean_fig, empty_figure, map_trace_cls
+from pastasdash_v2.ui.shell import pagina
+from pastasdash_v2.ui.tasks import run_in_thread
 
 log = logging.getLogger(__name__)
 
@@ -27,8 +27,7 @@ _METRIC_OPTIONS = {
 }
 
 
-def render() -> None:
-    render_header(active_tab="maps")
+def _inhoud() -> None:
     if not STORE.is_loaded:
         with ui.card().classes("w-full max-w-xl mx-auto mt-8"):
             ui.label("Laad eerst een PastaStore op de Start-pagina.").classes("text-lg")
@@ -104,8 +103,10 @@ def _build_choropleth(df: pd.DataFrame, metric: str, cmap: str, reverse: bool) -
     series = df["metric_value"]
     if series.dropna().empty:
         return empty_figure(f"Geen waarden voor {metric}")
+    # Zie plots.map_trace_cls: plotly 6 verving Mapbox door MapLibre.
+    trace_cls, sleutel = map_trace_cls()
     fig = go.Figure(
-        go.Scattermapbox(
+        trace_cls(
             lat=df["lat"], lon=df["lon"], text=df.index,
             mode="markers",
             marker=dict(
@@ -116,9 +117,19 @@ def _build_choropleth(df: pd.DataFrame, metric: str, cmap: str, reverse: bool) -
         )
     )
     fig.update_layout(
-        mapbox_style="open-street-map",
-        mapbox_center=dict(lat=float(df["lat"].mean()), lon=float(df["lon"].mean())),
-        mapbox_zoom=8,
+        **{
+            f"{sleutel}_style": "open-street-map",
+            f"{sleutel}_center": dict(
+                lat=float(df["lat"].mean()), lon=float(df["lon"].mean())
+            ),
+            f"{sleutel}_zoom": 8,
+        },
         margin=dict(l=0, r=0, t=0, b=0), height=600,
     )
     return fig
+
+
+def render() -> None:
+    """Weergave binnen de vaste omlijsting (kop + peilbuizenlijst)."""
+    with pagina("maps"):
+        _inhoud()

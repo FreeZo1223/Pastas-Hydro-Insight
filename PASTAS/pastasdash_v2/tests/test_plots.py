@@ -5,7 +5,7 @@ from __future__ import annotations
 import pandas as pd
 import plotly.graph_objects as go
 
-from pastasdash_v2.components.plots import clean_fig
+from pastasdash_v2.ui.components.plots import clean_fig
 
 
 def test_clean_fig_converts_timestamps():

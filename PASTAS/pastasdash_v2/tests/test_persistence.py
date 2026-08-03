@@ -6,7 +6,7 @@ import sqlite3
 
 import pytest
 
-from pastasdash_v2.state import persistence as p
+from pastasdash_v2.core import persistence as p
 
 
 @pytest.fixture(autouse=True)

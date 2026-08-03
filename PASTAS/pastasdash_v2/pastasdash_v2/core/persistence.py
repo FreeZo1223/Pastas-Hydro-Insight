@@ -20,7 +20,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Iterator
 
-from pastasdash_v2.config import STATE_DB_PATH
+from pastasdash_v2.core.config import STATE_DB_PATH
 
 log = logging.getLogger(__name__)
 
