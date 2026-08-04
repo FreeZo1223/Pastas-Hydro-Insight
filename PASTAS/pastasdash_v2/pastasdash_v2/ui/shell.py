@@ -107,20 +107,23 @@ def _takenmelder() -> None:
     houder = ui.row().classes("items-center gap-2 no-wrap")
 
     def _ververs() -> None:
-        houder.clear()
-        with houder:
-            if len(REGISTRY) == 0:
-                return
-            ui.spinner(size="xs", color="primary")
-            labels = REGISTRY.labels()
-            extra = f" +{len(labels) - 1}" if len(labels) > 1 else ""
-            ui.label(f"{labels[0]}{extra}").classes("text-xs").style(
-                "color: var(--peil-slate)"
-            )
+        try:
+            houder.clear()
+            with houder:
+                if len(REGISTRY) == 0:
+                    return
+                ui.spinner(size="xs", color="primary")
+                labels = REGISTRY.labels()
+                extra = f" +{len(labels) - 1}" if len(labels) > 1 else ""
+                ui.label(f"{labels[0]}{extra}").classes("text-xs").style(
+                    "color: var(--peil-slate)"
+                )
+        except Exception:
+            pass
 
     _ververs()
-    REGISTRY.on_change(lambda: ui.timer(0.01, _ververs, once=True))
     ui.timer(1.0, _ververs)
+
 
 
 # ── Weergavekiezer ─────────────────────────────────────────────────────────

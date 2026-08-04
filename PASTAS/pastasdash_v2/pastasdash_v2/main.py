@@ -64,8 +64,8 @@ def run(host: str = "127.0.0.1", port: int = DEFAULT_PORT, reload: bool = False)
     # script_mode aan en laat ui.run() vervolgens crashen op de @ui.page-routes
     # hierboven. Per pagina zet apply_theme() de kleuren nogmaals; deze regel
     # dekt de korte periode vóór de eerste render.
-    app.on_startup(lambda: ui.colors(primary=BRAND_COLOR))
     ui.run(
         host=host, port=port, title="PastasDash",
-        reload=reload, show=False, storage_secret=APP_NAME,
+        reload=reload, show=False,
     )
+
