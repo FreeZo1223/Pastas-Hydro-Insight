@@ -14,6 +14,7 @@ from pastasdash_v2.core.stations import DEFAULT_STATION_CODE, STATIONS_BY_CODE, 
 from pastasdash_v2.ui.components.plots import clean_fig, droogte_figure, empty_figure
 from pastasdash_v2.ui.shell import pagina
 from pastasdash_v2.ui.tasks import run_in_thread
+from pastasdash_v2.ui.theme import apply_theme
 
 log = logging.getLogger(__name__)
 
@@ -121,4 +122,32 @@ def _inhoud() -> None:
 def render() -> None:
     """Weergave binnen de vaste omlijsting (kop + peilbuizenlijst)."""
     with pagina("droogte"):
+        _inhoud()
+
+
+def render_standalone() -> None:
+    """Losse pagina met alléén het neerslagtekort — geen peilbuizen nodig.
+
+    Bedoeld voor collega's die niet de hele Menyanthes-achtige omgeving in
+    willen (dataset kiezen, peilbuizenlijst): deze grafiek is altijd te
+    bekijken, in de compacte opzet van v1 (instellingen links, grafiek
+    rechts, verder niets).
+    """
+    apply_theme()
+    with ui.header().classes("peil-rule").style(
+        "background: var(--peil-surface); padding: 0 20px; height: 52px;"
+    ):
+        with ui.row().classes("items-center justify-between w-full no-wrap h-full"):
+            with ui.row().classes("items-center gap-3 no-wrap"):
+                ui.html(
+                    '<div style="width:3px;height:20px;background:var(--peil-brand);'
+                    'border-radius:1px"></div>'
+                )
+                ui.label("PastasDash · Neerslagtekort").classes(
+                    "text-base font-semibold"
+                ).style("color: var(--peil-ink)")
+            ui.link("Naar het volledige dashboard", "/").classes(
+                "text-sm no-underline"
+            ).style("color: var(--peil-brand)")
+    with ui.column().classes("w-full p-0 gap-0"):
         _inhoud()

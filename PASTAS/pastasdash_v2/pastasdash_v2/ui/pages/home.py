@@ -37,7 +37,29 @@ def render() -> None:
             ).classes("text-sm").style("color: var(--peil-slate); max-width: 60ch")
 
         render_store_loader()
+        _neerslagtekort_link()
         _samenvatting()
+
+
+def _neerslagtekort_link() -> None:
+    """Altijd zichtbaar, ook zonder geladen dataset — de grafiek staat los.
+
+    Het neerslagtekort komt uit KNMI-data en heeft geen peilbuizen nodig, dus
+    collega's die alleen dát tabblad willen zien, hoeven niet eerst een
+    dataset te kiezen.
+    """
+    with ui.row().classes("peil-card w-full p-4 gap-4 items-center justify-between"):
+        with ui.column().classes("gap-1"):
+            ui.label("Alleen het neerslagtekort nodig?").classes(
+                "text-sm font-medium"
+            ).style("color: var(--peil-ink)")
+            ui.label(
+                "Geen dataset nodig — bekijk de grafiek direct."
+            ).classes("text-sm").style("color: var(--peil-slate)")
+        ui.button(
+            "Neerslagtekort bekijken",
+            on_click=lambda: ui.navigate.to("/neerslagtekort"),
+        ).props("outline no-caps")
 
 
 def _samenvatting() -> None:
