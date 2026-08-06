@@ -4,7 +4,28 @@ Gereedschap voor ecohydrologen om grondwaterreeksen te analyseren met
 [PASTAS](https://pastas.dev) — een lichtgewicht vervanging voor
 Menyanthes/Hydromonitor.
 
-## Eerste keer installeren
+## Het makkelijkst: dubbelklikken
+
+Naast deze repo staan twee startbestanden, ook op de J-schijf:
+
+| Bestand | Wat het start |
+|---|---|
+| `Start PastasDash v2.cmd` | Het dashboard (aanbevolen), poort 8051 |
+| `Start PastasDash v1.cmd` | De oorspronkelijke versie, poort 8050 |
+
+Dubbelklikken is genoeg. Ze halen de software zelf op naar
+`%LOCALAPPDATA%\PastasDash`, werken hem bij bij elke start, en openen de
+browser zodra het dashboard klaar is. Je hebt alleen `uv` en `git` nodig; het
+venster zegt het als er iets ontbreekt, met het commando erbij.
+
+De eerste start duurt een paar minuten — Python, de pakketten en de eerste
+virusscan. Daarna is het een kwestie van seconden. Laat het zwarte venster
+openstaan zolang je het dashboard gebruikt; sluiten stopt het.
+
+Beide kunnen tegelijk aan staan; ze gebruiken dezelfde kopie van de software en
+verschillende poorten.
+
+## Zelf starten vanaf de opdrachtregel
 
 Je hebt alleen [uv](https://docs.astral.sh/uv/) nodig; die regelt Python en
 alle pakketten zelf. Een GitHub-account is niet nodig: deze repo is openbaar en

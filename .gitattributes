@@ -1,0 +1,5 @@
+# Startbestanden moeten CRLF houden, ongeacht de git-instellingen van de
+# gebruiker. Een .cmd met alleen LF kan cmd.exe in de war brengen bij labels
+# en meerregelige blokken.
+*.cmd text eol=crlf
+*.bat text eol=crlf
