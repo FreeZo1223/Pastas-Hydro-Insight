@@ -1,3 +1,15 @@
+# ── Niet van deze repo ──────────────────────────────────────
+# Deze map ligt binnen de bredere Eelerwoude GIS-werkruimte en bevat
+# daardoor ook MODFLOW-materiaal dat hier niet thuishoort (13 GB).
+# Het blijft op schijf staan, maar gaat de repo niet in.
+modflow/
+CLAUDE-modflow-werkinstructie.md
+modflow-pipeline-blokschema.svg
+modflow-skillnetwerk-blokschema.svg
+files.zip
+_claude_memory/
+_robocopy_log.txt
+
 # ── Secrets / lokale config ─────────────────────────────────
 .env
 .env.local
@@ -5,8 +17,8 @@
 *.key
 
 # ── Editor / agent caches ───────────────────────────────────
-/.cache/
-/.claude/
+.cache/
+.claude/
 
 # ── Python ──────────────────────────────────────────────────
 __pycache__/
@@ -21,6 +33,7 @@ htmlcov/
 
 # ── uv / venv (lockfile WEL committen voor reproduceerbaarheid) ──
 .venv/
+.venv-*/
 .venvs/
 
 # ── Jupyter ─────────────────────────────────────────────────

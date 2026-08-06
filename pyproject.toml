@@ -1,13 +1,13 @@
 [tool.uv.workspace]
 members = [
-    "PASTAS/pastas_adapter",
-    "PASTAS/pastasdash",
+    "pastas_adapter",
+    "pastasdash",
 ]
 # pastasdash_v2 is een zelfstandige app met een eigen pyproject.toml,
 # .python-version en uv.lock. Als workspace-member zou uv de omgeving van deze
 # root gebruiken en zijn eigen vastgelegde versies negeren; draai hem daarom
-# vanuit zijn eigen map (`cd PASTAS/pastasdash_v2 && uv run pastasdash-v2`).
-exclude = ["PASTAS/pastasdash_v2"]
+# vanuit zijn eigen map (`cd pastasdash_v2 && uv run pastasdash-v2`).
+exclude = ["pastasdash_v2"]
 
 [tool.uv.sources]
 pastas-adapter = { workspace = true }

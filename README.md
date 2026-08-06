@@ -4,30 +4,41 @@ Gereedschap voor ecohydrologen om grondwaterreeksen te analyseren met
 [PASTAS](https://pastas.dev) — een lichtgewicht vervanging voor
 Menyanthes/Hydromonitor.
 
+## Eerste keer installeren
+
+Je hebt alleen [uv](https://docs.astral.sh/uv/) nodig; die regelt Python en
+alle pakketten zelf. Een GitHub-account is niet nodig: deze repo is openbaar en
+alle afhankelijkheden komen van PyPI.
+
+```powershell
+git clone https://github.com/FreeZo1223/Pastas-Hydro-Insight.git
+cd Pastas-Hydro-Insight
+```
+
 ## Wat wil je draaien?
 
 ### PastasDash v2 — het dashboard (aanbevolen)
 
 Peilbuizen kiezen, reeksen bekijken, modellen fitten en GxG/grondwatertrap
-aflezen. Je hebt alleen [uv](https://docs.astral.sh/uv/) nodig; die regelt
-Python en alle pakketten zelf.
+aflezen.
 
 ```powershell
-cd PASTAS\pastasdash_v2
+cd pastasdash_v2
 uv run pastasdash-v2
 ```
 
 Open daarna <http://127.0.0.1:8051>. De eerste keer duurt even omdat uv Python
 en de pakketten ophaalt. Volledige uitleg staat in
-[`PASTAS/pastasdash_v2/README.md`](PASTAS/pastasdash_v2/README.md).
+[`pastasdash_v2/README.md`](pastasdash_v2/README.md).
 
 ### PastasDash v1 — de oorspronkelijke Dash-versie
 
 De upstream [`pastas/pastasdash`](https://github.com/pastas/pastasdash) met een
-extra Droogte-tab.
+extra Droogte-tab. Nog in gebruik bij collega's; blijft beschikbaar zolang v2
+niet alles overneemt wat hier fijner werkte.
 
 ```powershell
-cd PASTAS\pastasdash
+cd pastasdash
 uv run pastasdash
 ```
 
@@ -39,19 +50,45 @@ Draait op <http://127.0.0.1:8050>, dus v1 en v2 kunnen tegelijk aan staan.
 git pull
 ```
 
-Daarna opnieuw starten; uv installeert gewijzigde pakketten zelf. Je hebt geen
-GitHub-account nodig: deze repo is openbaar en alle afhankelijkheden komen van
-PyPI.
+Daarna opnieuw starten; uv installeert gewijzigde pakketten zelf.
+
+## Werkt er iets niet?
+
+Meld een fout met: **wat je deed**, **wat je verwachtte**, en de **volledige
+foutmelding** uit het venster (niet alleen de laatste regel). Zonder die tekst
+is een fout meestal niet te vinden zonder eerst te raden.
 
 ## Verder in deze repo
 
 | Map | Inhoud |
 |---|---|
-| `PASTAS/pastasdash_v2/` | Het dashboard (NiceGUI). Zelfstandig, met eigen `uv.lock`. |
-| `PASTAS/pastasdash/` | De oorspronkelijke Dash-versie. |
-| `PASTAS/pastas_adapter/` | Gedeelde adapter tussen PASTAS/PastaStore en de rest. |
-| `PASTAS/notebooks/` | Uitleg-notebooks: van ruwe peilbuisdata naar een model. |
-| `PASTAS/Mantel_Test/`, `data/`, `scripts/`, `output/` | Voorbeelddata en hulpscripts. |
+| `pastasdash_v2/` | Het dashboard (NiceGUI). Zelfstandig, met eigen `uv.lock`. |
+| `pastasdash/` | De oorspronkelijke Dash-versie. |
+| `pastas_adapter/` | Gedeelde adapter tussen PASTAS/PastaStore en de rest. |
+| `notebooks/` | Uitleg-notebooks: van ruwe peilbuisdata naar een model. |
+| `Mantel_Test/`, `data/`, `scripts/`, `output/` | Voorbeelddata en hulpscripts. |
+
+### De voorbeelddataset
+
+De notebooks en scripts draaien op één peilbuis bij Axel (Zeeland):
+
+| Eigenschap | Waarde |
+|---|---|
+| DINO-ID | B42C0133 |
+| BRO-ID | GMW000000069526 |
+| Locatie | 3,537° O, 51,578° N |
+| Periode | 1995–2004 (~230 metingen per filter) |
+| Filters | 001 (ondiep), 002 (dieper) |
+| Referentie | NAP (m) |
+| KNMI-station | Terneuzen (nr. 742) |
+
+> De neerslag- en verdampingsreeksen in `data/knmi/` zijn **gesimuleerd** — ze
+> zijn ooit gemaakt toen de KNMI-API offline was. Gebruik ze om de werkwijze te
+> leren, niet voor uitspraken over een gebied. Echte data haal je op met
+> `scripts/haal_knmi_data.py`.
+
+Notebooks in volgorde: `01_data_verkenning.ipynb` (data inladen en bekijken),
+daarna `02_pastas_model.ipynb` (model bouwen, kalibreren, GVG/GHG/GLG).
 
 ## Herkomst
 

@@ -14,8 +14,8 @@ Je hebt alleen [uv](https://docs.astral.sh/uv/) nodig; die regelt Python en
 alle pakketten zelf.
 
 ```powershell
-git clone https://github.com/FreeZo1223/pastasdash.git
-cd pastasdash
+git clone https://github.com/FreeZo1223/Pastas-Hydro-Insight.git
+cd Pastas-Hydro-Insight\pastasdash_v2
 uv run pastasdash-v2
 ```
 
