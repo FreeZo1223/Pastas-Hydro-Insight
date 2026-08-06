@@ -16,10 +16,16 @@ alle pakketten zelf.
 ```powershell
 git clone https://github.com/FreeZo1223/Pastas-Hydro-Insight.git
 cd Pastas-Hydro-Insight\pastasdash_v2
-uv run pastasdash-v2
+uv run python -m pastasdash_v2
 ```
 
 Open daarna <http://127.0.0.1:8051>.
+
+> Er bestaat ook een korter commando, `uv run pastasdash-v2`. Dat start een
+> `.exe` die uv net heeft aangemaakt, en een strenge virusscanner blokkeert dat
+> bij de eerste start: `Failed to spawn: Toegang geweigerd. (os error 5)`.
+> Via `python -m` gebeurt dat niet. Werkt de korte vorm bij jou, gebruik hem
+> gerust.
 
 De eerste keer duurt even: uv haalt Python 3.12 en de pakketten op. Daarna
 start het binnen enkele seconden. Er is **geen GitHub-account nodig** — alle
@@ -29,7 +35,7 @@ Bijwerken naar een nieuwere versie:
 
 ```powershell
 git pull
-uv run pastasdash-v2
+uv run python -m pastasdash_v2
 ```
 
 Handige opties: `--port 8052` (andere poort), `--reload` (herstart bij

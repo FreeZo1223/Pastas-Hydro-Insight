@@ -41,9 +41,15 @@ nodig voor ruwe BRO Loket-exports; het dashboard vraagt er zelf om.)
 ## Draaien
 
 ```powershell
-cd pastasdash_v2 && uv run pastasdash-v2      # v2, poort 8051
-cd pastasdash    && uv run pastasdash         # v1, poort 8050
+cd pastasdash_v2 && uv run python -m pastasdash_v2   # v2, poort 8051
+cd pastasdash    && uv run python -m pastasdash      # v1, poort 8050
 ```
+
+**Altijd `python -m`, nooit de console-scripts.** `uv run pastasdash-v2` start
+een `.exe` die uv net heeft aangemaakt; de virusscanner blokkeert dat met
+`Failed to spawn: Toegang geweigerd` (os error 5), juist bij de eerste start na
+klonen. Bewezen in één en dezelfde omgeving: de console-script faalde,
+`python -m` startte. v1 kreeg hiervoor een `__main__.py`.
 
 ## Werkwijze
 

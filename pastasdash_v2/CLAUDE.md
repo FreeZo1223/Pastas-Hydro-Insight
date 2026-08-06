@@ -6,10 +6,17 @@ kunnen klonen en draaien zonder GitHub-account. Houd dat zo: elke nieuwe
 dependency moet op PyPI staan.
 
 ```powershell
-uv run pastasdash-v2                          # start op http://127.0.0.1:8051
+uv run python -m pastasdash_v2                # start op http://127.0.0.1:8051
 uv run --extra dev python -m pytest tests/ -q
 uv run --extra dev ruff check pastasdash_v2/
 ```
+
+Overal `python -m`, niet de console-scripts (`uv run pastasdash-v2`,
+`uv run pytest`): de virusscanner blokkeert het starten van een vers
+aangemaakte `.exe` in de `.venv` met `Failed to spawn: Toegang geweigerd`
+(os error 5). Bewezen op één en dezelfde omgeving: `pastasdash-v2` faalde,
+`python -m pastasdash_v2` startte. Documenteer nooit de korte vorm als enige
+startcommando.
 
 `--extra dev` is nodig: pytest en ruff zitten niet in de standaardset (die is
 bewust minimaal voor collega's die alleen willen draaien). Zonder de extra

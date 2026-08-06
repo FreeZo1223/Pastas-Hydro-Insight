@@ -17,6 +17,10 @@ cd Pastas-Hydro-Insight
 
 ## Wat wil je draaien?
 
+De twee commando's hieronder start je allebei **vanuit de map
+`Pastas-Hydro-Insight`** (waar je na het klonen staat). Wil je na v2 ook v1
+starten, open dan een tweede venster — of ga eerst met `cd ..` terug.
+
 ### PastasDash v2 — het dashboard (aanbevolen)
 
 Peilbuizen kiezen, reeksen bekijken, modellen fitten en GxG/grondwatertrap
@@ -24,7 +28,7 @@ aflezen.
 
 ```powershell
 cd pastasdash_v2
-uv run pastasdash-v2
+uv run python -m pastasdash_v2
 ```
 
 Open daarna <http://127.0.0.1:8051>. De eerste keer duurt even omdat uv Python
@@ -39,10 +43,25 @@ niet alles overneemt wat hier fijner werkte.
 
 ```powershell
 cd pastasdash
-uv run pastasdash
+uv run python -m pastasdash
 ```
 
 Draait op <http://127.0.0.1:8050>, dus v1 en v2 kunnen tegelijk aan staan.
+
+## Waarom `python -m` en niet gewoon `uv run pastasdash-v2`?
+
+Die kortere vorm bestaat ook en doet hetzelfde, maar hij start een `.exe` die
+uv net zelf heeft aangemaakt. Een strenge virusscanner blokkeert dat:
+
+```
+error: Failed to spawn: `pastasdash-v2`
+  Caused by: Toegang geweigerd. (os error 5)
+```
+
+Dat treft juist de eerste start ná het klonen. Met `python -m` komt er geen
+nieuw uitvoerbaar bestand aan te pas en werkt het wel — op dezelfde machine, in
+dezelfde omgeving, getest. Gebruik daarom `python -m`; als de korte vorm bij
+jou werkt, is die net zo goed.
 
 ## Bijwerken
 
