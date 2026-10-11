@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PastasDash</title>
+<style>
+/*LEAFLET_CSS*/
+</style>
+<style>
+/*CSS*/
+</style>
+</head>
+<body>
+
+<header class="kop peil-rule">
+  <div class="kop-links">
+    <div class="merk-streep"></div>
+    <span class="merk">PastasDash</span>
+    <span class="kop-bron" id="kop-bron">geen project geopend</span>
+  </div>
+  <div class="kop-rechts">
+    <span class="bezig" id="bezig" hidden><span class="draaier"></span><span id="bezig-tekst"></span></span>
+    <span class="opslag" id="opslag"></span>
+  </div>
+</header>
+
+<div class="romp">
+  <aside class="zijbalk" id="zijbalk"></aside>
+  <main class="werk">
+    <nav class="tabs peil-rule" id="tabs"></nav>
+    <div class="melding" id="melding" hidden></div>
+    <section class="vlak" id="vlak"></section>
+  </main>
+</div>
+
+<div class="opstart" id="opstart">
+  <div class="opstart-kaart peil-card">
+    <div class="merk-rij"><div class="merk-streep"></div><span class="merk">PastasDash</span></div>
+    <p class="opstart-uitleg">De rekenkern wordt geladen. Dat duurt ongeveer een kwart minuut en heeft internet nodig.</p>
+    <div class="opstart-stap"><span class="draaier" id="opstart-draaier"></span><span id="opstart-stap">Beginnen</span></div>
+    <pre class="opstart-fout" id="opstart-fout" hidden></pre>
+  </div>
+</div>
+
+<script id="pd-bronnen" type="application/json">__BRONNEN__</script>
+<script id="pd-code" type="application/json">__CODE__</script>
+<script id="pd-staat" type="application/json">__STAAT__</script>
+<script id="pd-werker" type="text/plain">
+/*WERKER*/
+</script>
+<script>
+/*LEAFLET_JS*/
+</script>
+<script>
+var VERSIE = '__VERSIE__';
+/*JS*/
+</script>
+</body>
+</html>

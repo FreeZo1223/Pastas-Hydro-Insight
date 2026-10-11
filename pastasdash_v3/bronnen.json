@@ -1,0 +1,29 @@
+{
+  "_toelichting": "De enige plek waar adressen en versies van PastasDash v3 staan. bouw.py bouwt dit bestand in; de rekenkern en de pagina lezen het.",
+  "pyodide": {
+    "versie": "0.27.7",
+    "basis": "https://cdn.jsdelivr.net/pyodide/v0.27.7/full/"
+  },
+  "plotly_js": {
+    "versie": "4.1.1",
+    "adres": "https://cdn.plot.ly/plotly-{versie}.min.js"
+  },
+  "pakketten": {
+    "pyodide": ["numpy", "pandas", "scipy", "matplotlib", "micropip", "sqlite3", "pyproj", "pyodide-http"],
+    "pip": ["tqdm", "jinja2", "pyyaml", "colorama", "diskcache", "plotly==7.1.0"],
+    "pip_zonder_afhankelijkheden": ["pastas==2.0.0", "pastastore==2.0.0"]
+  },
+  "bro": {
+    "relaties": "https://publiek.broservices.nl/gm/v1/gmw-relations/{gmw}",
+    "put": "https://publiek.broservices.nl/gm/gmw/v1/objects/{gmw}",
+    "reeks": "https://publiek.broservices.nl/gm/gld/v1/seriesAsCsv/{gld}",
+    "bron": "BRO (Basisregistratie Ondergrond), TNO"
+  },
+  "knmi": {
+    "bron": "KNMI daggegevens"
+  },
+  "kaart": {
+    "tegels": "https://service.pdok.nl/brt/achtergrondkaart/wmts/v2_0/grijs/EPSG:3857/{z}/{x}/{y}.png",
+    "bron": "Kadaster (BRT Achtergrondkaart), PDOK"
+  }
+}

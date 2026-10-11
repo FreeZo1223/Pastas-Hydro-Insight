@@ -103,6 +103,7 @@ is een fout meestal niet te vinden zonder eerst te raden.
 | Map | Inhoud |
 |---|---|
 | `pastasdash_v2/` | Het dashboard (NiceGUI). Zelfstandig, met eigen `uv.lock`. |
+| `pastasdash_v3/` | De browserversie: één HTML-bestand, niets installeren. Zie [`pastasdash_v3/README.md`](pastasdash_v3/README.md). |
 | `pastasdash/` | De oorspronkelijke Dash-versie. |
 | `pastas_adapter/` | Gedeelde adapter tussen PASTAS/PastaStore en de rest. |
 | `notebooks/` | Uitleg-notebooks: van ruwe peilbuisdata naar een model. |

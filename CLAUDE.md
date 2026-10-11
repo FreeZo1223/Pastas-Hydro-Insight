@@ -8,14 +8,15 @@ bredere Eelerwoude GIS-workspace — `geo_stack`, `BeSI`, `lesa-agent-v2` en
 > hier. Alles wat naast deze map staat (`modflow/`, `lesa-agent-v2/`) hoort er
 > niet bij en staat in `.gitignore`.
 
-## Rolverdeling v1 / v2
+## Rolverdeling v1 / v2 / v3
 
-Beide versies blijven draaien, met verschillende status:
+Alle versies blijven draaien, met verschillende status:
 
 | | Status | Wat mag erin |
 |---|---|---|
 | `pastasdash/` (v1, Dash) | **In gebruik bij collega's, bevroren** | Alleen bugfixes. Geen nieuwe functies, geen refactors. |
 | `pastasdash_v2/` (v2, NiceGUI) | **In ontwikkeling** | Nieuwe functies. Doel: alles overnemen wat collega's in v1 waarderen. |
+| `pastasdash_v3/` (v3, browser) | **In ontwikkeling, sinds okt 2026** | Eén HTML-bestand, niets installeren. Gebruikt de rekenkern van v2; rekent zelf niets uit. |
 
 v1 draait op poort 8050, v2 op 8051 — ze kunnen tegelijk aan staan.
 
@@ -30,6 +31,10 @@ navigatie of de vormgeving van de grafiek) vóór er iets aan v2 verandert.
 - `pastasdash_v2` — NiceGUI-variant. **Zelfstandig**: eigen `pyproject.toml`,
   `.python-version` en `uv.lock`, en bewust géén workspace-member. Eigen
   werkinstructies in `pastasdash_v2/CLAUDE.md`.
+- `pastasdash_v3` — de browserversie: Python via Pyodide, met `pastasdash_v2/core`
+  ingebouwd. Geen eigen omgeving; de tests lenen die van v2. Eigen
+  werkinstructies in `pastasdash_v3/CLAUDE.md`. **Een wijziging in de kern van
+  v2 komt pas in v3 na `python pastasdash_v3/bouw.py`.**
 - `pastas_adapter` — gedeelde adapter tussen PASTAS/PastaStore en de rest.
   Workspace-member.
 
