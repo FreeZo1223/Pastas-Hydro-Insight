@@ -1414,20 +1414,21 @@ wheels = [
 
 [[package]]
 name = "pastas"
-version = "1.11.0"
+version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "matplotlib" },
     { name = "numba" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "numpy", version = "2.5.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "packaging" },
     { name = "pandas" },
     { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "scipy", version = "1.18.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f6/6c/cbabdbbbeffd7ca9819a4e703fcc02e947c825250c63b5897e325c940ac9/pastas-1.11.0.tar.gz", hash = "sha256:46a2cdf1a50043b8f6cc97b4a01e3863cad63c431c5095f7b59ca996ccf0a809", size = 195636, upload-time = "2025-09-11T13:22:43.274Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d5/0e/48b8e736d90df91481606d3ab0558edcbd2bd618f5c7add9fd88ca340277/pastas-2.0.0.tar.gz", hash = "sha256:a71ae8ff98bdece13fbf71b24b1ed44d87010be6aa8c89d6d1a05209f8d49960", size = 253910, upload-time = "2026-09-02T09:53:04.302Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0f/85/73b503bf96c6b63c7ae34ae0717933a4b0f32c741464914c83a0228648d3/pastas-1.11.0-py3-none-any.whl", hash = "sha256:62d0cc7717dda5b12c84bd96aa908e910381226fc619b0a57624b8f99d0ac2d2", size = 173916, upload-time = "2025-09-11T13:22:41.956Z" },
+    { url = "https://files.pythonhosted.org/packages/6e/5c/66990ad8872b170f39385c7d3e6acb10d87f7da5fe5b01da94e12cfe884f/pastas-2.0.0-py3-none-any.whl", hash = "sha256:a3bd827427b3a7da14ca608039833c6027177fcbcfba289de1c0243362016660", size = 216126, upload-time = "2026-09-02T09:53:03.068Z" },
 ]
 
 [[package]]
@@ -1461,8 +1462,8 @@ requires-dist = [
     { name = "nicegui", specifier = ">=2.0" },
     { name = "numpy", specifier = ">=1.26" },
     { name = "pandas", specifier = ">=2.0" },
-    { name = "pastas", specifier = ">=1.5" },
-    { name = "pastastore", specifier = ">=1.7" },
+    { name = "pastas", specifier = ">=2.0" },
+    { name = "pastastore", specifier = ">=2.0" },
     { name = "plotly", specifier = ">=5.20" },
     { name = "pyarrow", specifier = ">=15.0" },
     { name = "pyproj", specifier = ">=3.6" },
@@ -1473,17 +1474,17 @@ provides-extras = ["dev"]
 
 [[package]]
 name = "pastastore"
-version = "1.11.0"
+version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama" },
+    { name = "pandas" },
     { name = "pastas" },
     { name = "pyyaml" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/be/27/59d1b8f392bc6833d2a2b2ffc59855d21f32f418683d4678ab2a98b9ae6b/pastastore-1.11.0.tar.gz", hash = "sha256:2b90fd79f8e7037db4711be924d1dd28281988285a0f034a2b928c417234ea8e", size = 85755, upload-time = "2025-11-03T08:47:48.083Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d9/e3/775876e776534059ebb0cdd4ca893f9b62cdc9ec9ea62df8364de1e7ea9d/pastastore-2.0.0.tar.gz", hash = "sha256:4cf40a5a64902c0f47d3b9dbef52c9dad3d3ed1241c9a85afb77a9c0d6d07121", size = 101201, upload-time = "2026-09-02T13:50:44.399Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/19/00/567042fa114702aff83c439cf0fa09e405dda80373d737c22ec5eccdb88d/pastastore-1.11.0-py3-none-any.whl", hash = "sha256:42ca2c161903127501b4067861f3541181f40dd4f15688081ba98e20a2438504", size = 92459, upload-time = "2025-11-03T08:47:46.93Z" },
+    { url = "https://files.pythonhosted.org/packages/90/59/e8ec0590b5506be32ea88e975cf782b51ee262ef7c2d873358494c126974/pastastore-2.0.0-py3-none-any.whl", hash = "sha256:8d3762236b6955e6507f037b2da9d5780ce1654a900bf75c4cc9194ab9241191", size = 109593, upload-time = "2026-09-02T13:50:43.145Z" },
 ]
 
 [[package]]
