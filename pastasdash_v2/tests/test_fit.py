@@ -52,3 +52,15 @@ def test_fit_op_dagreeksen_slaagt(store_met_put):
     assert gelukt, melding
     assert ml.stats.rsq() > 0.8
     assert "put" in store_met_put.model_names
+
+
+@pytest.mark.unit
+def test_samenvatting_geeft_rsq_en_evp(store_met_put):
+    """Na een fit moeten R² en EVP in de samenvatting staan, niet leeg zijn."""
+    from pastasdash_v2.core.timeseries import model_summary
+
+    gelukt, melding, ml = fit_model("put", FitOptions())
+    assert gelukt, melding
+    samenvatting = model_summary.__wrapped__("test:fit", "put")
+    assert samenvatting["rsq"] == pytest.approx(ml.stats.rsq(), abs=1e-9)
+    assert samenvatting["evp"] == pytest.approx(ml.stats.evp(), abs=1e-9)

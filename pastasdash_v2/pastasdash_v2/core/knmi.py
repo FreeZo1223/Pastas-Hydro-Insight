@@ -46,7 +46,6 @@ def _fetch_via_hydropandas(station: int, start: str, end: str) -> pd.DataFrame:
 
 
 def _fetch_via_knmi_url(station: int, start: str, end: str) -> pd.DataFrame:
-    import io
     import urllib.request
 
     stn = str(station).zfill(3)
@@ -56,10 +55,21 @@ def _fetch_via_knmi_url(station: int, start: str, end: str) -> pd.DataFrame:
     )
     with urllib.request.urlopen(url, timeout=30) as resp:
         raw = resp.read().decode("utf-8")
+    return _lees_knmi_tekst(raw)
+
+
+def _lees_knmi_tekst(raw: str) -> pd.DataFrame:
+    """Zet het tekstantwoord van het KNMI om naar RH en EV24 in mm per dag."""
+    import io
+
+    # De kolomnamen staan in de laatste commentaarregel ("# STN,YYYYMMDD,...").
     lines = [line for line in raw.splitlines() if not line.startswith("#") and line.strip()]
-    df = pd.read_csv(io.StringIO("\n".join(lines)), skipinitialspace=True)
-    df.columns = [c.strip() for c in df.columns]
-    df = df.rename(columns={"YYYYMMDD": "datum"})
+    df = pd.read_csv(
+        io.StringIO("\n".join(lines)),
+        skipinitialspace=True,
+        header=None,
+        names=["STN", "datum", "RH", "EV24"],
+    )
     df["datum"] = pd.to_datetime(df["datum"].astype(str), format="%Y%m%d")
     df = df.set_index("datum").sort_index()
     for col in ("RH", "EV24"):

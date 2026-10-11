@@ -107,10 +107,11 @@ def model_summary(store_key: str, model_name: str) -> dict:
         ml = STORE.pstore.get_models(model_name)
         if ml is None:
             return {}
-        stats = ml.stats.summary()
+        # Rechtstreeks opvragen: de rijnamen van ml.stats.summary() verschillen
+        # per pastas-versie ("Rsq" in 1.x, "rsq" in 2.x).
         return {
-            "rsq": float(stats.loc["Rsq", "Value"]) if "Rsq" in stats.index else np.nan,
-            "evp": float(stats.loc["EVP", "Value"]) if "EVP" in stats.index else np.nan,
+            "rsq": float(ml.stats.rsq()),
+            "evp": float(ml.stats.evp()),
             "n_obs": int(ml.oseries.series.size),
             "tmin": ml.settings["tmin"].isoformat() if ml.settings.get("tmin") else None,
             "tmax": ml.settings["tmax"].isoformat() if ml.settings.get("tmax") else None,
