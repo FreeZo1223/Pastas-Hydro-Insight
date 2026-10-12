@@ -96,6 +96,8 @@ def bouw_skill(html: str) -> Path:
     (doel / "scripts").mkdir(parents=True)
     shutil.copy(HIER / "cowork" / "SKILL.md", doel / "SKILL.md")
     shutil.copy(HIER / "cowork" / "maak_pastasdash.py", doel / "scripts" / "maak_pastasdash.py")
+    (doel / "references").mkdir()
+    shutil.copy(HIER / "cowork" / "uitleg.md", doel / "references" / "uitleg.md")
 
     # Een skill-map mag geen .html/.js/.css bevatten; de pagina gaat daarom mee
     # als gecomprimeerde tekst in een Python-module.

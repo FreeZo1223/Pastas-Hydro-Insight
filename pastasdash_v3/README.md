@@ -95,7 +95,7 @@ downloaden het.
 | `src\werker.js` | De rekenwerker: Python buiten het scherm om, zodat de pagina niet bevriest |
 | `src\app.js`, `app.css`, `app.html` | Het scherm |
 | `vendor\` | Leaflet 1.9.4, wordt ingebouwd |
-| `cowork\` | De skill en het script dat de putnummers in het bestand zet |
+| `cowork\` | De skill, het script dat de putnummers in het bestand zet, en `uitleg.md`: de uitleg waarmee Cowork een collega begeleidt |
 
 - **Eén rekenkern.** GxG, grondwatertrap, fit en figuren komen uit
   `pastasdash_v2.core` en `ui\components\plots.py`. v3 rekent niets zelf uit.

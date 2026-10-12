@@ -9,7 +9,10 @@ description: |
   Use when the user asks to "maak een PastasDash", "analyseer deze peilbuizen",
   "tijdreeksanalyse voor project X", "GxG / GHG / GLG van deze putten", "fit
   een PASTAS-model", "vervanger voor Menyanthes", "neerslagtekort bekijken", of
-  BRO-putnummers (GMW…) noemt of een lijst met putnummers uploadt.
+  BRO-putnummers (GMW…) noemt of een lijst met putnummers uploadt. Ook bij
+  vragen als "hoe werkt PastasDash", "wat kan ik met PastasDash", "welke
+  responsfunctie moet ik kiezen" of "hoe krijg ik de putten uit de
+  gebiedsverkenner in PastasDash".
   Do NOT use voor kaartjes van het gebied (gebruik eelerwoude-gebiedsverkenner),
   voor eigen lagen tonen (eelerwoude-kaart), of om zelf een GxG, een model of
   een conclusie over het grondwatersysteem te geven: dat doet de pagina, en de
@@ -34,6 +37,32 @@ KNMI, en rekent de modellen en statistieken uit.
   hebt geen enkele meetreeks gezien.** Zeg dus nooit iets over standen, GxG,
   grondwatertrap, trend of modelkwaliteit.
 
+## Begeleiden
+
+Veel collega's gebruiken PastasDash voor het eerst. Neem ze mee in plaats van
+alleen een bestand af te leveren. Alle uitleg staat in
+[references/uitleg.md](references/uitleg.md): wat de pagina kan, de keuzes,
+hoe je de uitkomsten leest en de koppeling met de gebiedsverkenner. Gebruik
+alleen wat daar staat.
+
+- **Vraagt de collega alleen hoe het werkt**, maak dan geen bestand: leg het
+  uit met de tabel *Wat je ermee kunt* en de vier keuzes, kort.
+- **Wil de collega aan de slag**, stel eerst met één `AskUserQuestion` (twee
+  of drie vragen tegelijk) wat je nog niet weet:
+  - *Wat wil je doen?* Reeksen bekijken · GxG en grondwatertrap · modellen
+    fitten · alleen het neerslagtekort (multiSelect).
+  - *Welke putten?* Alleen vragen als er geen putnummers zijn genoemd of
+    geüpload. Opties: ik plak ze zelf in de pagina · ik haal ze uit de
+    gebiedsverkenner · ik upload een lijst.
+  - *Waar komt het project te staan?* Een projectmap op OneDrive (aanbevolen;
+    gedeeld met collega's) · zonder map, met een zip aan het eind.
+- **Stem het antwoord af op de keuzes**: noem alleen de weergaven en stappen
+  die bij het doel horen. Alleen het neerslagtekort? Dan zijn putnummers en
+  een projectmap niet nodig; zeg dat. Komen de putten uit de gebiedsverkenner?
+  Geef de drie stappen uit *De koppeling met de gebiedsverkenner*.
+- **Modellen fitten gekozen?** Noem de standaardkeuze (Gamma, ruismodel aan)
+  en dat een lage R² in een peilgestuurd gebied normaal is.
+
 ## Tools
 
 | Stap | Tool |
@@ -45,7 +74,12 @@ KNMI, en rekent de modellen en statistieken uit.
 
 ## Workflow
 
-### 1. Verzamel de putnummers
+### 1. Vraag door waar nodig
+
+Zie *Begeleiden* hierboven. Sla vragen over waar de vraag het antwoord al
+geeft.
+
+### 2. Verzamel de putnummers
 
 Een BRO-putnummer begint met `GMW` en heeft twaalf cijfers
 (`GMW000000069526`). Neem ze over uit de vraag, of uit een geüpload tekst- of
@@ -55,7 +89,7 @@ putten: in de pagina kan de collega ze zelf plakken.
 Verzin geen putnummers en zoek ze niet zelf op. De putnummers van een gebied
 vindt de collega in de gebiedsverkenner (laag *Peilbuizen*) of in het BRO-loket.
 
-### 2. Maak het bestand
+### 3. Maak het bestand
 
 ```bash
 python scripts/maak_pastasdash.py --out working/PastasDash_<project>.html \
@@ -66,7 +100,7 @@ Met een bestand: `--putten-bestand input/<bestand>` (alle putnummers die erin
 voorkomen worden gebruikt). Beide opties mogen samen. Bouw altijd naar
 `working/`; `output/` is alleen-lezen.
 
-### 3. Lees de samenvatting
+### 4. Lees de samenvatting
 
 Het script drukt JSON af.
 
@@ -77,7 +111,7 @@ Het script drukt JSON af.
 | `aantal_putten` | Noem dit aantal; het zijn nummers, geen gecontroleerde putten |
 | `metingen_opgehaald`, `modellen_gemaakt` | Altijd `false`: jij hebt niets opgehaald en niets berekend |
 
-### 4. Lever op
+### 5. Lever op
 
 Publiceer met `CopyArtifact(surface="output", …)` en controleer met
 `Glob output/**/*` dat het bestand er staat voordat je "klaar" zegt.
@@ -88,7 +122,8 @@ Precies één `.html` in `output/`. Antwoord kort en in het Nederlands:
 
 1. de bestandsnaam;
 2. hoeveel putnummers erin staan, en eventuele waarschuwingen, letterlijk;
-3. het gebruik in vier regels:
+3. het gebruik, afgestemd op wat de collega wil doen (zie *Begeleiden*), met
+   in elk geval:
    - **downloaden** en openen in Edge of Chrome (rechtstreeks openen vanuit
      SharePoint of Teams werkt niet); het laden duurt ongeveer een kwart minuut
      en heeft internet nodig;
@@ -99,6 +134,8 @@ Precies één `.html` in `output/`. Antwoord kort en in het Nederlands:
      *Vergelijken*, *Statistiek*, *Kaart* en *Droogte* volgen die keuze;
    - zonder projectmap staat het werk alleen in het tabblad: dan aan het eind
      **Exporteer als zip**.
+4. als de putten uit de gebiedsverkenner moeten komen: de drie stappen uit
+   [references/uitleg.md](references/uitleg.md).
 
 Noem geen scriptnamen, paden of technische foutmeldingen.
 
