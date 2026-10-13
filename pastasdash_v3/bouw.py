@@ -96,6 +96,10 @@ def bouw_skill(html: str) -> Path:
     (doel / "scripts").mkdir(parents=True)
     shutil.copy(HIER / "cowork" / "SKILL.md", doel / "SKILL.md")
     shutil.copy(HIER / "cowork" / "maak_pastasdash.py", doel / "scripts" / "maak_pastasdash.py")
+    # Putten zoeken in een projectgrens: dezelfde module als in de pagina, en de
+    # grenslezer van de gebiedsverkenner (een kopie; tests/test_zoeken.py bewaakt dat).
+    shutil.copy(HIER / "pastasdash_v3" / "zoeken.py", doel / "scripts" / "zoeken.py")
+    shutil.copy(HIER / "cowork" / "geo_io.py", doel / "scripts" / "geo_io.py")
     (doel / "references").mkdir()
     shutil.copy(HIER / "cowork" / "uitleg.md", doel / "references" / "uitleg.md")
 
@@ -108,6 +112,7 @@ def bouw_skill(html: str) -> Path:
         "Gegenereerd door bouw.py -- niet met de hand aanpassen.\n"
         '"""\n\n'
         f'VERSIE = "{versie()}"\n'
+        f'BRO_ZOEKEN = "{json.loads((HIER / "bronnen.json").read_text(encoding="utf-8"))["bro"]["zoeken"]}"\n'
         f"STAATBLOK = {STAATBLOK!r}\n\n"
         f"APP_ZB64 = (\n{regels}\n)\n",
         encoding="utf-8",

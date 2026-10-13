@@ -5,11 +5,13 @@ description: |
   ecohydroloog peilbuisreeksen uit de BRO bekijkt, tijdreeksmodellen (PASTAS)
   fit en GxG, grondwatertrap, duurlijn en neerslagtekort afleest. De pagina
   rekent zelf, in de browser van de collega; de skill zet alleen de projectnaam
-  en de BRO-putnummers erin.
+  en de BRO-putnummers erin, en zoekt die putnummers op als de collega een
+  projectgrens aanlevert.
   Use when the user asks to "maak een PastasDash", "analyseer deze peilbuizen",
   "tijdreeksanalyse voor project X", "GxG / GHG / GLG van deze putten", "fit
   een PASTAS-model", "vervanger voor Menyanthes", "neerslagtekort bekijken", of
-  BRO-putnummers (GMW…) noemt of een lijst met putnummers uploadt. Ook bij
+  BRO-putnummers (GMW…) noemt, een lijst met putnummers uploadt, of "de
+  peilbuizen in mijn projectgebied" wil met een projectgrens erbij. Ook bij
   vragen als "hoe werkt PastasDash", "wat kan ik met PastasDash", "welke
   responsfunctie moet ik kiezen" of "hoe krijg ik de putten uit de
   gebiedsverkenner in PastasDash".
@@ -32,7 +34,8 @@ KNMI, en rekent de modellen en statistieken uit.
 ## Wat de skill wél en niet doet
 
 - **Wel:** de projectnaam en de BRO-putnummers in het bestand zetten, zodat de
-  pagina bij openen meteen die putten ophaalt.
+  pagina bij openen meteen die putten ophaalt. Met een projectgrens zoekt het
+  script zelf welke BRO-putten erin staan (alleen de nummers en de ligging).
 - **Niet:** metingen ophalen, modellen fitten of statistieken berekenen. **Je
   hebt geen enkele meetreeks gezien.** Zeg dus nooit iets over standen, GxG,
   grondwatertrap, trend of modelkwaliteit.
@@ -52,8 +55,10 @@ alleen wat daar staat.
   - *Wat wil je doen?* Reeksen bekijken · GxG en grondwatertrap · modellen
     fitten · alleen het neerslagtekort (multiSelect).
   - *Welke putten?* Alleen vragen als er geen putnummers zijn genoemd of
-    geüpload. Opties: ik plak ze zelf in de pagina · ik haal ze uit de
-    gebiedsverkenner · ik upload een lijst.
+    geüpload. Opties: zoek ze in mijn projectgrens (die upload ik) · ik kies
+    ze in de gebiedsverkenner · ik plak ze zelf in de pagina · ik upload een
+    lijst. Bij de projectgrens: vraag of er ook putten net buiten mee moeten
+    (marge in meters; 0 als de collega het niet weet).
   - *Waar komt het project te staan?* Een projectmap op OneDrive (aanbevolen;
     gedeeld met collega's) · zonder map, met een zip aan het eind.
 - **Stem het antwoord af op de keuzes**: noem alleen de weergaven en stappen
@@ -67,7 +72,7 @@ alleen wat daar staat.
 
 | Stap | Tool |
 |---|---|
-| Lijst met putnummers zoeken | `Glob` (`input/**/*`) |
+| Lijst met putnummers of projectgrens zoeken | `Glob` (`input/**/*`) |
 | Bestand bouwen | `Bash` (`python scripts/maak_pastasdash.py …`) |
 | Opleveren | `CopyArtifact(surface="output", …)` |
 | Alleen bij echte twijfel | `AskUserQuestion` |
@@ -79,15 +84,23 @@ alleen wat daar staat.
 Zie *Begeleiden* hierboven. Sla vragen over waar de vraag het antwoord al
 geeft.
 
-### 2. Verzamel de putnummers
+### 2. Verzamel de putnummers of de projectgrens
 
 Een BRO-putnummer begint met `GMW` en heeft twaalf cijfers
 (`GMW000000069526`). Neem ze over uit de vraag, of uit een geüpload tekst- of
-csv-bestand. Noemt de collega geen putnummers, maak dan een bestand **zonder**
-putten: in de pagina kan de collega ze zelf plakken.
+csv-bestand.
 
-Verzin geen putnummers en zoek ze niet zelf op. De putnummers van een gebied
-vindt de collega in de gebiedsverkenner (laag *Peilbuizen*) of in het BRO-loket.
+Heeft de collega een **projectgrens** geüpload (`.gpkg`, `.shp`, `.geojson`,
+of een `.zip` met een shapefile), geef die dan mee met `--grens`; het script
+zoekt de putten. Een GeoPackage met meer lagen geeft `lagen` terug: vraag
+welke laag de grens is en draai opnieuw met `--laag`.
+
+Geen putnummers en geen grens? Maak een bestand **zonder** putten: in de
+pagina kan de collega ze zelf plakken, of ze kiezen in de gebiedsverkenner
+(tabblad *Putten*).
+
+Verzin geen putnummers en zoek ze niet op een andere manier op dan met het
+script.
 
 ### 3. Maak het bestand
 
@@ -97,8 +110,9 @@ python scripts/maak_pastasdash.py --out working/PastasDash_<project>.html \
 ```
 
 Met een bestand: `--putten-bestand input/<bestand>` (alle putnummers die erin
-voorkomen worden gebruikt). Beide opties mogen samen. Bouw altijd naar
-`working/`; `output/` is alleen-lezen.
+voorkomen worden gebruikt). Met een projectgrens:
+`--grens input/<grens> [--laag <laag>] [--marge 250]`. Alle opties mogen
+samen. Bouw altijd naar `working/`; `output/` is alleen-lezen.
 
 ### 4. Lees de samenvatting
 
@@ -109,6 +123,9 @@ Het script drukt JSON af.
 | `ok: false` + `melding` | Het bestand is **niet** gemaakt. Geef de melding in gewone taal door |
 | `waarschuwingen` | **Letterlijk** doorgeven: niet-herkende nummers, of meer putten dan er klaargezet zijn |
 | `aantal_putten` | Noem dit aantal; het zijn nummers, geen gecontroleerde putten |
+| `lagen` (bij `ok: false`) | Het GeoPackage heeft meer lagen: vraag welke de grens is |
+| `gebied.gezocht_door: "cowork"` | Het script vond `gebied.gevonden` putten in de grens (`verwijderd`: waarvan verwijderd; `buiten_grens`: in de marge). Noem die aantallen |
+| `gebied.gezocht_door: "pagina"` | Hier was geen internet. Zeg: "de pagina zoekt de putten in je projectgrens zodra je hem opent". Noem **geen** aantal |
 | `metingen_opgehaald`, `modellen_gemaakt` | Altijd `false`: jij hebt niets opgehaald en niets berekend |
 
 ### 5. Lever op
@@ -165,7 +182,9 @@ Noem geen scriptnamen, paden of technische foutmeldingen.
 | Situatie | Doe dit |
 |---|---|
 | Geen putnummers genoemd | Maak het bestand zonder putten; zeg dat de collega ze in de pagina kan plakken |
-| Alleen een gebied of plaatsnaam | Idem; verwijs naar de gebiedsverkenner om de putnummers te vinden |
+| Alleen een plaatsnaam, geen grens | Maak het bestand zonder putten; vraag om een projectgrens, of verwijs naar de gebiedsverkenner (tabblad *Putten*) |
+| Meer dan 2000 putten in en rond de grens | Het script weigert; vraag om een kleiner gebied of een kleinere marge |
+| Grens van lijnen of punten | Het script weigert: zoeken kan alleen in een vlak |
 | DINO-nummers (B42C0133) of eigen putcodes | Die kent de pagina niet; vraag om de BRO-putnummers (GMW…) |
 | Eigen meetreeksen (csv, Excel, Menyanthes-bestand) | Kan deze pagina nog niet inlezen; meld dat |
 | Collega heeft al een projectmap van PastasDash | Geen nieuw bestand nodig: dezelfde pagina opent die map |

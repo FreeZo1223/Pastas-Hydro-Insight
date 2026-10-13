@@ -19,7 +19,12 @@ willen installeren, en wordt voorlopig als los bestand via Cowork uitgedeeld.
 4. Kies links de peilbuizen; de weergaven volgen die keuze.
 
 Een bestandsnaam met `#put=GMW000000069526,GMW…` erachter haalt die putten
-meteen op. Zo kan een andere pagina (de gebiedsverkenner) ernaar doorverwijzen.
+meteen op. Zo verwijst de gebiedsverkenner ernaar door (tabblad *Putten*,
+knop *Openen in PastasDash*); zet de twee bestanden daarvoor in dezelfde map.
+
+Een bestand dat Cowork met een projectgrens maakte, maar zonder internet, heeft
+het gebied in zich: de pagina zoekt dan bij het openen zelf de BRO-putten
+erin.
 
 | Weergave | Wat je ziet |
 |---|---|
@@ -89,13 +94,15 @@ downloaden het.
 | `bronnen.json` | De enige plek met adressen en versies: Pyodide, Plotly, pakketten, BRO, kaarttegels |
 | `pastasdash_v3\brug.py` | De ingang voor de pagina: elke knop is één handeling, JSON erin en eruit |
 | `pastasdash_v3\bro.py` | Put en meetreeksen uit de BRO |
+| `pastasdash_v3\zoeken.py` | Putten in een gebied zoeken (alleen standaardbibliotheek: draait in de pagina én in de skill) |
 | `pastasdash_v3\meteo.py` | Neerslag en verdamping van het dichtstbijzijnde KNMI-station, zonder gaten |
 | `pastasdash_v3\project.py` | De store aanmaken en openen, en bijhouden welke bestanden veranderd zijn |
 | `pastasdash_v3\figuren.py` | Wat in v2 in de NiceGUI-pagina's zelf staat (vergelijking, kaartwaarden) |
 | `src\werker.js` | De rekenwerker: Python buiten het scherm om, zodat de pagina niet bevriest |
 | `src\app.js`, `app.css`, `app.html` | Het scherm |
 | `vendor\` | Leaflet 1.9.4, wordt ingebouwd |
-| `cowork\` | De skill, het script dat de putnummers in het bestand zet, en `uitleg.md`: de uitleg waarmee Cowork een collega begeleidt |
+| `cowork\` | De skill, het script dat de putnummers in het bestand zet (of ze in een projectgrens opzoekt), en `uitleg.md`: de uitleg waarmee Cowork een collega begeleidt |
+| `cowork\geo_io.py` | **Kopie** van de grenslezer van de gebiedsverkenner (`C:\GIS\Tools\gebiedsverkenner\cowork\geo_io.py`); `tests\test_zoeken.py` faalt als ze uit elkaar lopen |
 
 - **Eén rekenkern.** GxG, grondwatertrap, fit en figuren komen uit
   `pastasdash_v2.core` en `ui\components\plots.py`. v3 rekent niets zelf uit.
@@ -136,5 +143,10 @@ downloaden het.
   dat breken; de versies staan daarom vast in `bronnen.json`.
 - **Twee mensen tegelijk in dezelfde map** schrijven over elkaar heen; er is
   geen vergrendeling.
-- **Putnummers zoeken op de kaart** kan nog niet; die komen uit de
-  gebiedsverkenner of het BRO-loket.
+- **Putten kiezen op de kaart** kan niet in PastasDash zelf, wel in de
+  gebiedsverkenner (tabblad *Putten*).
+- **Zoeken in een gebied** levert hooguit 2000 putten in de omsluitende
+  rechthoek; daarboven weigert de BRO.
+- **Of Cowork internet heeft, is nog niet in Cowork zelf vastgesteld.** Het
+  script probeert het; lukt het niet, dan zoekt de pagina. Beide routes zijn
+  getest (de tweede door het internet in de test af te sluiten).

@@ -12,7 +12,9 @@ wat een collega doet:
      weergaven langs, en het project als zip exporteren;
   2. een projectmap kiezen, daarin werken, de pagina herladen en dezelfde map
      weer openen;
-  3. de zip en de projectmap openen met de rekenkern van de desktop (v2).
+  3. de zip en de projectmap openen met de rekenkern van de desktop (v2);
+  4. een bestand openen dat Cowork zonder internet met een projectgrens
+     maakte: de pagina zoekt dan zelf de putten in dat gebied.
 
 De mappenkiezer van de browser vraagt een muisklik en is niet te bedienen
 vanuit een test. Stap 2 vervangt hem door een map in de eigen opslag van de
@@ -241,6 +243,39 @@ def stap_desktop(uit: Path, rsq_zip: float, rsq_map: float) -> None:
     toets("desktop rekent dezelfde R² uit de map", abs(gelezen[paden[1]]["rsq"] - rsq_map) < 1e-6, f"{gelezen[paden[1]]['rsq']} tegen {rsq_map}")
 
 
+def stap_zoekgebied(browser, uit: Path) -> None:
+    print("\n4. Projectgrens, putten zoekt de pagina", flush=True)
+    sys.path.insert(0, str(HIER.parent))
+    from pastasdash_v3 import zoeken
+    from pastasdash_v3.bronnen import BRONNEN
+
+    # Een vierkant van ruim 600 m rond de proefput bij Axel.
+    vierkant = [[3.531, 51.575], [3.541, 51.575], [3.541, 51.581], [3.531, 51.581], [3.531, 51.575]]
+    grens = uit / "grens.geojson"
+    grens.write_text(json.dumps({"type": "Polygon", "coordinates": [vierkant]}), encoding="utf-8")
+    verwacht = [q["id"] for q in zoeken.zoek_putten(BRONNEN["bro"]["zoeken"], {"type": "Polygon", "coordinates": [vierkant]})]
+    script = HIER.parent / "dist" / "eelerwoude-pastasdash" / "scripts" / "maak_pastasdash.py"
+    omgeving = dict(os.environ, HTTPS_PROXY="http://127.0.0.1:9", HTTP_PROXY="http://127.0.0.1:9")
+    r = subprocess.run([sys.executable, str(script), "--out", str(uit / "zoek.html"), "--titel", "Axel", "--grens", str(grens)],
+                       capture_output=True, text=True, encoding="utf-8", env=omgeving)
+    samen = json.loads(r.stdout)
+    toets("Cowork zonder internet laat het zoeken aan de pagina", samen["gebied"]["gezocht_door"] == "pagina", r.stdout[-300:])
+
+    pg = browser.new_page(viewport={"width": 1500, "height": 950})
+    schermfouten: list[str] = []
+    luister(pg, schermfouten)
+    start(pg, (uit / "zoek.html").as_uri())
+    rustig(pg, 300)
+    verslag = pg.evaluate("PD.S.broVerslag.map(r => r.tekst).join(' | ')")
+    toets("de pagina vindt evenveel putten als Cowork zou vinden", f"{len(verwacht)} BRO-putten in Axel" in verslag,
+          f"verwacht {len(verwacht)}: {verslag[:300]}")
+    namen = pg.evaluate("PD.S.toestand.putten.map(p => p.naam)")
+    toets("en haalt hun reeksen op", bool(namen) and all(n.rsplit("_", 1)[0] in verwacht for n in namen), str(namen))
+    toets("geen schermfouten bij zoeken", not schermfouten, "; ".join(schermfouten[:3]))
+    pg.screenshot(path=str(uit / "zoekgebied.png"))
+    pg.close()
+
+
 def main() -> int:
     if not PAGINA.exists():
         print(f"{PAGINA} bestaat niet; draai eerst bouw.py")
@@ -250,6 +285,7 @@ def main() -> int:
         browser = p.chromium.launch(channel=os.environ.get("PASTASDASH_BROWSER", "msedge"))
         rsq_zip = stap_lokaal_bestand(browser, uit)
         rsq_map = stap_projectmap(browser, uit)
+        stap_zoekgebied(browser, uit)
         browser.close()
     stap_desktop(uit, rsq_zip, rsq_map)
     print(f"\n{'ALLES IN ORDE' if not fouten else str(len(fouten)) + ' FOUT: ' + '; '.join(fouten)}")

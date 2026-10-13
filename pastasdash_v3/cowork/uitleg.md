@@ -25,7 +25,8 @@ geïnstalleerd te worden; wel nodig: Edge of Chrome en internet.
 
 Wat het **niet** kan: eigen meetreeksen inlezen (csv, Excel, Menyanthes),
 DINO-nummers, peilen of onttrekkingen als verklarende reeks, niet-lineaire
-modellen, putten zoeken op de kaart.
+modellen. Putten kiezen op de kaart doe je in de gebiedsverkenner (zie
+hieronder).
 
 ## De keuzes die een collega maakt
 
@@ -40,7 +41,10 @@ modellen, putten zoeken op de kaart.
 - *Zonder map*: het werk staat alleen in het tabblad. Aan het eind
   *Exporteer als zip*, anders is het weg. Firefox en Safari kunnen alleen zo.
 
-**2. Welke putten.** BRO-putnummers (`GMW` en twaalf cijfers). Van elke put
+**2. Welke putten.** BRO-putnummers (`GMW` en twaalf cijfers), op drie
+manieren: kiezen op de kaart in de gebiedsverkenner, de projectgrens aan
+Cowork geven (dan worden alle putten erin opgezocht, eventueel met een marge
+erbuiten), of zelf plakken. Van elke put
 komen alle filters met metingen mee, als daggemiddelde in m NAP. Een put
 zonder meetreeks in de BRO meldt de pagina; dat kan, veel putten hebben er
 geen.
@@ -80,16 +84,36 @@ buurstation, staat in het verslag onder de knop.
 De gebiedsverkenner laat zien wélke putten er in en rond het projectgebied
 staan; PastasDash analyseert hun meetreeksen.
 
-1. Open de gebiedsverkenner van het project en zet de laag *BRO peilbuizen*
-   aan (zoom in tot de putten verschijnen).
-2. Klik op een put: het venster toont het **BRO-ID** (`GMW…`).
-3. Neem de nummers over:
-   - in PastasDash onder *Project* → *Peilbuizen toevoegen uit de BRO*, of
-   - in Cowork: noem de nummers, dan zet de skill ze in een nieuw
-     PastasDash-bestand dat ze bij openen meteen ophaalt.
+**Eenmalig:** zet `pastasdash.html` in **dezelfde map** als de
+gebiedsverkenner (bijvoorbeeld de projectmap op OneDrive). De knop in de
+gebiedsverkenner zoekt PastasDash daar. Staat hij ergens anders, vul dan op het
+tabblad *Putten* onder *Waar PastasDash staat* het pad in.
+
+1. Open de gebiedsverkenner en ga naar het tabblad **Putten**.
+2. Kies de peilbuizen, op een van drie manieren:
+   - **Alle putten binnen de projectgrens**, eventueel met een marge in meters
+     erbuiten;
+   - **Gebied tekenen op de kaart**: klik de hoekpunten, dubbelklik om af te
+     sluiten (Esc breekt af);
+   - **Ctrl-klik** op losse peilbuizen (laag *BRO peilbuizen*, ingezoomd) om
+     ze toe te voegen of weg te halen. Een gewone klik toont de gegevens van
+     de put met een knop *Openen in PastasDash*.
+
+   Gekozen putten krijgen een roze ring; de lijst staat op het tabblad.
+3. **Openen in PastasDash**: PastasDash opent in een nieuw tabblad en haalt de
+   metingen van de gekozen putten op.
+
+Ook zonder gebiedsverkenner: geef Cowork de projectgrens, dan zoekt de skill de
+putten erin op. Heeft Cowork geen internet, dan zoekt de pagina ze zelf zodra
+de collega hem opent.
+
+Putten op precies dezelfde plek (een putnest) liggen op de kaart over elkaar;
+Ctrl-klik raakt dan alleen de bovenste. Teken er een gebiedje omheen om ze
+allemaal te kiezen.
 
 De gebiedsverkenner toont alleen putten die in de BRO staan. Meetnetten van
-terreinbeheerders en waterschappen ontbreken vaak.
+terreinbeheerders en waterschappen ontbreken vaak. Een verwijderde put
+(gemarkeerd in de lijst) heeft vaak nog een lange oude meetreeks.
 
 ## Veelgestelde vragen
 

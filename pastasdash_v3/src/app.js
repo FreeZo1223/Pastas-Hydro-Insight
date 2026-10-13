@@ -741,11 +741,20 @@ async function opstarten() {
   $('opstart').style.display = 'none';
   document.body.dataset.klaar = 'ja';
 
-  const putten = gevraagdePutten();
-  if (putten.length) {
+  let putten = gevraagdePutten();
+  if (putten.length || STAAT.zoekgebied) {
     try {
       await nieuwLos(STAAT.titel || 'project');
       S.weergave = 'project'; tekenAlles();
+      /* Cowork kon de putten niet zelf opzoeken en gaf het projectgebied mee: dan zoekt de pagina ze. */
+      if (STAAT.zoekgebied && !putten.length) {
+        const z = STAAT.zoekgebied, max = STAAT.max_putten || 60;
+        const r = await roep('zoek_putten', { gebied: z.gebied, marge_m: z.marge_m || 0 }, 'Putten zoeken in ' + (z.naam || 'het projectgebied'));
+        putten = r.putten.map((p) => p.id);
+        S.broVerslag.push({ tekst: putten.length + ' BRO-putten ' + (z.marge_m ? 'binnen ' + z.marge_m + ' m van ' : 'in ') + (z.naam || 'het projectgebied') + (putten.length > max ? '; de eerste ' + max + ' worden opgehaald' : '') });
+        if (!putten.length) meld('In ' + (z.naam || 'het projectgebied') + ' staan geen putten in de BRO. Voeg ze zelf toe onder Project.', 'goed');
+        putten = putten.slice(0, max);
+      }
       await voegPuttenToe(putten, null);
       if (S.toestand.putten.length) { S.weergave = 'reeksen'; tekenAlles(); }
     } catch (f) { meldFout(f); }

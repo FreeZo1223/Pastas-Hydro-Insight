@@ -17,6 +17,7 @@
     "relaties": "https://publiek.broservices.nl/gm/v1/gmw-relations/{gmw}",
     "put": "https://publiek.broservices.nl/gm/gmw/v1/objects/{gmw}",
     "reeks": "https://publiek.broservices.nl/gm/gld/v1/seriesAsCsv/{gld}",
+    "zoeken": "https://publiek.broservices.nl/gm/gmw/v1/characteristics/searches",
     "bron": "BRO (Basisregistratie Ondergrond), TNO"
   },
   "knmi": {

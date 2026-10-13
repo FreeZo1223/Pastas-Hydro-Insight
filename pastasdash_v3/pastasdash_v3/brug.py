@@ -25,7 +25,8 @@ from pastasdash_v2.core.stations import DEFAULT_STATION_CODE, STATIONS, STATIONS
 from pastasdash_v2.core.store import STORE
 from pastasdash_v2.core.timeseries import get_oseries, get_stress, gxg, model_summary
 from pastasdash_v2.ui.components import plots
-from pastasdash_v3 import __version__, figuren, meteo, project
+from pastasdash_v3 import __version__, figuren, meteo, project, zoeken
+from pastasdash_v3.bronnen import BRONNEN
 
 log = logging.getLogger(__name__)
 
@@ -144,6 +145,17 @@ def schijf_is_leeg() -> None:
 @handeling
 def voeg_put_toe(gmw: str) -> dict:
     return project.voeg_put_toe(gmw)
+
+
+@handeling
+def zoek_putten(gebied: dict, marge_m: float = 0.0) -> dict:
+    """De BRO-putten in een gebied; voor een bestand dat Cowork met een projectgrens maakte."""
+    try:
+        putten = zoeken.zoek_putten(BRONNEN["bro"]["zoeken"], gebied, marge_m)
+    except zoeken.TeGroot:
+        raise ValueError("In en rond dit gebied staan meer dan 2000 putten; de BRO levert ze dan niet. "
+                         "Kies een kleiner gebied.") from None
+    return {"putten": putten}
 
 
 @handeling
